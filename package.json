@@ -1,0 +1,21 @@
+{
+  "name": "noosa_admin_board",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon app.js",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ramo-11/Noosa_Admin_Board.git"
+  },
+  "keywords": [],
+  "author": "Omar Abdelalim",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.15"
+  }
+}
