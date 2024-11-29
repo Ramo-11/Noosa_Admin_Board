@@ -3,52 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoices</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/styles/index.css">
 </head>
 <body>
-    <h1>Invoices</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Invoice Number</th>
-                <th>Customer Name</th>
-                <th>Customer Email</th>
-                <th>Session Date</th>
-                <th>Due Date</th>
-                <th>Hours</th>
-                <th>Price</th>
-                <th>Total</th>
-                <th>Paid Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% invoices.forEach(invoice => { %>
-                <tr>
-                    <td><%= invoice.invoiceNumber %></td>
-                    <td><%= invoice.customerName %></td>
-                    <td><%= invoice.customerEmail %></td>
-                    <td><%= new Date(invoice.sessionDate).toLocaleDateString("en-US") %></td>
-                    <td><%= new Date(invoice.dueDate).toLocaleDateString("en-US") %></td>
-                    <td><%= invoice.hours %></td>
-                    <td><%= invoice.price %></td>
-                    <td><%= invoice.total %></td>
-                    <td><%= invoice.isPaid ? "Paid" : "notPaid" %></td>
-                </tr>
-            <% }) %>
-        </tbody>        
-    </table>    
+    <div class="container">
+        <h1>Admin Dashboard</h1>
+        <div class="tabs">
+            <button class="tab-button" onclick="switchTab('users')">Users</button>
+            <button class="tab-button" onclick="switchTab('appointments')">Appointments</button>
+            <button class="tab-button" onclick="switchTab('invoices')">Invoices</button>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users" class="tab-content">
+            <h2>Users</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(user => { %>
+                        <tr id="user-row-<%= user._id %>">
+                            <td><span class="view-mode"><%= user.fullName %></span>
+                                <input type="text" class="edit-mode" value="<%= user.fullName %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= user.email %></span>
+                                <input type="email" class="edit-mode" value="<%= user.email %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= user.phoneNumber || 'N/A' %></span>
+                                <input type="text" class="edit-mode" value="<%= user.phoneNumber %>" style="display: none;">
+                            </td>
+                            <td>
+                                <button class="edit-btn" onclick="startEditing('user', '<%= user._id %>')">Edit</button>
+                                <button class="submit-btn edit-mode" onclick="submitEdit('user', '<%= user._id %>')" style="display: none;">Submit</button>
+                                <button class="cancel-btn edit-mode" onclick="cancelEdit('user', '<%= user._id %>')" style="display: none;">Cancel</button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>                
+            </table>
+        </div>
+
+        <!-- Appointments Tab -->
+        <div id="appointments" class="tab-content" style="display: none;">
+            <h2>Appointments</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Course Name</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% appointments.forEach(appointment => { %>
+                        <tr id="appointment-row-<%= appointment._id %>">
+                            <td><span class="view-mode"><%= appointment.customer.fullName %></span>
+                                <input type="text" class="edit-mode" value="<%= appointment.customer.fullName %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= appointment.courseName %></span>
+                                <input type="text" class="edit-mode" value="<%= appointment.courseName %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= appointment.appointmentDate %></span>
+                                <input type="date" class="edit-mode" value="<%= appointment.appointmentDate %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= appointment.status %></span>
+                                <select class="edit-mode" style="display: none;">
+                                    <option value="Scheduled" <%= appointment.status === 'Scheduled' ? 'selected' : '' %>>Scheduled</option>
+                                    <option value="Completed" <%= appointment.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+                                    <option value="Cancelled" <%= appointment.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button class="edit-btn" onclick="startEditing('appointment', '<%= appointment._id %>')">Edit</button>
+                                <button class="submit-btn edit-mode" onclick="submitEdit('appointment', '<%= appointment._id %>')" style="display: none;">Submit</button>
+                                <button class="cancel-btn edit-mode" onclick="cancelEdit('appointment', '<%= appointment._id %>')" style="display: none;">Cancel</button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>                
+            </table>
+        </div>
+
+        <!-- Invoices Tab -->
+        <div id="invoices" class="tab-content" style="display: none;">
+            <h2>Invoices</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>Customer</th>
+                        <th>Session Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% invoices.forEach(invoice => { %>
+                        <tr id="invoice-row-<%= invoice._id %>">
+                            <td><span class="view-mode"><%= invoice.invoiceNumber %></span>
+                                <input type="text" class="edit-mode" value="<%= invoice.invoiceNumber %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= invoice.customer.fullName %></span>
+                                <input type="text" class="edit-mode" value="<%= invoice.customer.fullName %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= invoice.sessionDate %></span>
+                                <input type="text" class="edit-mode" value="<%= invoice.sessionDate %>" style="display: none;">
+                            </td>
+                            <td><span class="view-mode"><%= invoice.total %></span>
+                                <input type="number" class="edit-mode" value="<%= invoice.total %>" style="display: none;">
+                            </td>
+                            <td>
+                                <span class="view-mode"><%= invoice.isPaid ? 'Yes' : 'No' %></span>
+                                <select class="edit-mode" style="display: none;">
+                                    <option value="true" <%= invoice.isPaid ? 'selected' : '' %>>Yes</option>
+                                    <option value="false" <%= !invoice.isPaid ? 'selected' : '' %>>No</option>
+                                </select>
+                            </td>                            
+                            <td>
+                                <button class="edit-btn" onclick="startEditing('invoice', '<%= invoice._id %>')">Edit</button>
+                                <button class="submit-btn edit-mode" onclick="submitEdit('invoice', '<%= invoice._id %>')" style="display: none;">Submit</button>
+                                <button class="cancel-btn edit-mode" onclick="cancelEdit('invoice', '<%= invoice._id %>')" style="display: none;">Cancel</button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>                
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Function to switch tabs
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabName).style.display = 'block';
+        }
+    
+        // Set the default tab to Users
+        document.getElementById('users').style.display = 'block';
+    
+        function startEditing(type, rowId) {
+            const row = document.getElementById(`${type}-row-${rowId}`);
+            
+            // Hide view mode and edit button
+            row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none');
+            row.querySelector('.edit-btn').style.display = 'none';
+            
+            // Show edit mode and submit/cancel buttons
+            row.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'inline-block');
+        }
+        
+        function cancelEdit(type, rowId) {
+            const row = document.getElementById(`${type}-row-${rowId}`);
+            
+            // Show view mode and edit button
+            row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'inline-block');
+            row.querySelector('.edit-btn').style.display = 'inline-block';
+            
+            // Hide edit mode and submit/cancel buttons
+            row.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'none');
+        }
+        
+        async function submitEdit(type, rowId) {
+            const row = document.getElementById(`${type}-row-${rowId}`);
+            const data = {};
+        
+            // Collect input values based on type
+            if (type === 'user') {
+                data.fullName = row.querySelector('input[type="text"]').value;
+                data.email = row.querySelector('input[type="email"]').value;
+                data.phoneNumber = row.querySelector('input[type="text"]').value;
+            } else if (type === 'invoice') {
+                data.invoiceNumber = row.querySelector('input[type="text"]').value;
+                data.total = parseFloat(row.querySelector('input[type="number"]').value);
+            } else if (type === 'appointment') {
+                data.courseName = row.querySelector('input[type="text"]').value;
+                data.appointmentDate = row.querySelector('input[type="date"]').value;
+                data.status = row.querySelector('select').value;
+            }
+        
+            try {
+                const response = await fetch(`/index/${type}s/${rowId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+        
+                if (response.ok) {
+                    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully!`);
+                    window.location.reload(); // Reload to reflect changes
+                } else {
+                    alert(`Failed to update ${type}. Please try again.`);
+                }
+            } catch (error) {
+                console.error(`Error updating ${type}:`, error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>    
 </body>
 </html>

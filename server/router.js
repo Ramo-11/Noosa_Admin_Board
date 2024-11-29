@@ -1,11 +1,26 @@
-const express = require("express")
-require('dotenv').config()
-const route = express.Router()
-const { GetInvoices } = require("./InvoiceController");
+const express = require("express");
+const route = express.Router();
+require("dotenv").config();
 
+// Import Controller Methods
+const { 
+    getAdminDashboard, 
+    updateUser, 
+    updateAppointment, 
+    updateInvoice 
+} = require("./Controller");
 
-// *********** GET requests **********
-route.get("/", GetInvoices)
+// *********** GET Requests ***********
+route.get("/", getAdminDashboard);
 
+// *********** PUT Requests ***********
+// Update User
+route.put("/index/users/:id", updateUser);
 
-module.exports = route
+// Update Appointment
+route.put("/index/appointments/:id", updateAppointment);
+
+// Update Invoice
+route.put("/index/invoices/:id", updateInvoice);
+
+module.exports = route;
