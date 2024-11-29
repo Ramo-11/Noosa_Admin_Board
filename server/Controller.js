@@ -53,6 +53,8 @@ const updateAppointment = async (req, res) => {
 };
 
 const updateInvoice = async (req, res) => {
+    console.log("Request Body:", req.body);
+
     try {
         const updatedInvoice = await Invoice.findByIdAndUpdate(req.params.id, req.body, {
             new: true,

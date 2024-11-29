@@ -124,11 +124,11 @@
                             </td>
                             <td>
                                 <span class="view-mode"><%= invoice.isPaid ? 'Yes' : 'No' %></span>
-                                <select class="edit-mode" style="display: none;">
+                                <select class="edit-mode" style="display: none;" name="isPaid">
                                     <option value="true" <%= invoice.isPaid ? 'selected' : '' %>>Yes</option>
                                     <option value="false" <%= !invoice.isPaid ? 'selected' : '' %>>No</option>
                                 </select>
-                            </td>                            
+                            </td>                       
                             <td>
                                 <button class="edit-btn" onclick="startEditing('invoice', '<%= invoice._id %>')">Edit</button>
                                 <button class="submit-btn edit-mode" onclick="submitEdit('invoice', '<%= invoice._id %>')" style="display: none;">Submit</button>
@@ -186,6 +186,9 @@
             } else if (type === 'invoice') {
                 data.invoiceNumber = row.querySelector('input[type="text"]').value;
                 data.total = parseFloat(row.querySelector('input[type="number"]').value);
+                const isPaidSelect = row.querySelector('select[name="isPaid"]');
+                data.isPaid = isPaidSelect ? isPaidSelect.value === 'true' : false; 
+
             } else if (type === 'appointment') {
                 data.courseName = row.querySelector('input[type="text"]').value;
                 data.appointmentDate = row.querySelector('input[type="date"]').value;
