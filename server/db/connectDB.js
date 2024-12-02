@@ -2,15 +2,15 @@ const mongoose = require("mongoose")
 const { generalLogger } = require("../utils/generalLogger")
 
 const connectDB = async() => {
-    let url = ""
-    if(process.env.NODE_ENV !== undefined && process.env.NODE_ENV.trim() === "development") {
-        url = process.env.MONGODB_URI_DEV
+    if (process.env.NODE_ENV !== "production") {
+        process.env.MONGODB_URI = process.env.MONGODB_URI_DEV
     } else {
-        url = process.env.MONGODB_URI
+        process.env.MONGODB_URI = process.env.MONGODB_URI_PROD
     }
     
     try {
-        const con = await mongoose.connect(url)
+        generalLogger.debug(`Attempting to connect to database with url: ${process.env.MONGODB_URI}`)
+        const con = await mongoose.connect(process.env.MONGODB_URI)
         generalLogger.info(`MongoDB connected successfully: ${con.connection.host}`)
     } catch(error) {
         generalLogger.error("unable to connect to database: are you sure the IP address is whitelisted in the database?\n")

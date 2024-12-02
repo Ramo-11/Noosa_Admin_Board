@@ -7,6 +7,7 @@ const connectDB = require('./server/db/connectDB')
 
 const app = express()
 require('dotenv').config()
+generalLogger.info("Running in " + process.env.NODE_ENV + " mode")
 connectDB()
 
 app.use(bodyParser.json())
