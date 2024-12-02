@@ -1,6 +1,8 @@
-const User = require('../models/User');
-const Appointment = require('../models/Appointment');
-const Invoice = require('../models/Invoice');
+const User = require('../models/User')
+const Appointment = require('../models/Appointment')
+const Invoice = require('../models/Invoice')
+const { generalLogger } = require("./utils/generalLogger")
+const bcrypt = require('bcrypt')
 
 const getAdminDashboard = async (req, res) => {
     try {
@@ -10,9 +12,10 @@ const getAdminDashboard = async (req, res) => {
 
         res.render('index', { users, appointments, invoices })
     } catch (error) {
+        generalLogger.error(`Error getting admin dashboard: ${error.message}`)
         res.status(500).send("Server Error")
     }
-};
+}
 
 const updateUser = async (req, res) => {
     try {
@@ -25,9 +28,11 @@ const updateUser = async (req, res) => {
             return res.status(404).send({ message: "User not found" })
         }
 
-        res.status(200).json(updatedUser)
+        generalLogger.info(`User updated successfully: ${updatedUser}`)
+        return res.status(200).send({ message: "User updated successfully" })
     } catch (error) {
-        res.status(500).send("Server Error")
+        generalLogger.error(`Error updating user: ${error}`)
+        return res.status(500).send({ message: `Unable to update user. Error: ${error}` })
     }
 }
 
@@ -42,11 +47,13 @@ const updateAppointment = async (req, res) => {
             return res.status(404).send({ message: "Appointment not found" })
         }
 
-        res.status(200).json(updatedAppointment)
+        generalLogger.info(`Appointment updated successfully: ${updatedAppointment}`)
+        return res.status(200).send({ message: "Appointment updated successfully" })
     } catch (error) {
-        res.status(500).send("Server Error")
+        generalLogger.error(`Error updating appointment: ${error}`)
+        return res.status(500).send({ message: `Unable to update appointment. Error: ${error}` })
     }
-};
+}
 
 const updateInvoice = async (req, res) => {
     try {
@@ -59,11 +66,141 @@ const updateInvoice = async (req, res) => {
             return res.status(404).send({ message: "Invoice not found" })
         }
 
-        res.status(200).json(updatedInvoice)
+        generalLogger.info(`Invoice updated successfully: ${updatedInvoice}`)
+        return res.status(200).send({ message: "Invoice updated successfully" })
     } catch (error) {
-        console.error("Error updating invoice:", error)
-        res.status(500).send("Server Error")
+        generalLogger.error(`Error updating invoice: ${error}`)
+        return res.status(500).send({ message: `Unable to update invoice. Error: ${error}` })
     }
 }
 
-module.exports = { getAdminDashboard, updateUser, updateAppointment, updateInvoice }
+const createUser = async (req, res) => {
+    try {
+        const { fullName, email, phoneNumber } = req.body
+        if (!fullName || !email) return res.status(400).send({ message: "Full name and email are required" })
+
+        const existingUser = await User.findOne({ email })
+        if (existingUser) return res.status(400).send({ message: "Email already exists" })
+
+        const defaultPassword = "NoosaEngage1!"
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10)
+
+        const newUser = new User({
+            fullName,
+            email,
+            phoneNumber,
+            password: hashedPassword
+        })
+
+        await newUser.save()
+
+        generalLogger.info(`User created successfully`)
+        return res.status(201).send({ message: "User created successfully" })
+    } catch (error) {
+        generalLogger.error(`Error creating user: ${error}`)
+        return res.status(500).send({ message: `Unable to create user. Error: ${error}` })
+    }
+}
+
+
+const createAppointment = async (req, res) => {
+    try {
+        const { customerEmail, courseName, appointmentDate, appointmentTime, status } = req.body
+        if (!customerEmail || !courseName || !appointmentDate || !appointmentTime) 
+            return res.status(400).send({ message: "Customer email, course name, appointment date, and time are required" })
+
+        const customer = await User.findOne({ email: customerEmail })
+        if (!customer) {
+            generalLogger.error(`Cannot create appointment. Customer not found`)
+            return res.status(400).send({ message: "Customer not found" })
+        }
+
+        const newAppointment = new Appointment({
+            customer: customer._id,
+            courseName,
+            appointmentDate,
+            appointmentTime,
+            status
+        })
+
+        await newAppointment.save()
+
+        generalLogger.info(`Appointment created successfully`)
+        return res.status(201).send({ message: "Appointment created successfully" })
+    } catch (error) {
+        generalLogger.error(`Error creating appointment: ${error}`)
+        return res.status(500).send({ message: `Unable to create appointment. Error: ${error}` })
+    }
+}
+
+const createInvoice = async (req, res) => {
+    try {
+        const { invoiceNumber, customerEmail, sessionDate, total, isPaid } = req.body
+        if (!invoiceNumber || !customerEmail || !sessionDate || total == null) 
+            return res.status(400).send({ message: "Invoice number, customer email, session date, and total amount are required" })
+
+        const existingInvoice = await Invoice.findOne({ invoiceNumber })
+        if (existingInvoice) return res.status(400).send({ message: "Invoice number already exists" })
+
+        await Invoice.create({ invoiceNumber, customerEmail, sessionDate, total, isPaid })
+
+        generalLogger.info(`Invoice created successfully`)
+        return res.status(201).send({ message: "Invoice created successfully" })
+    } catch (error) {
+        generalLogger.error(`Error creating invoice: ${error}`)
+        return res.status(500).send({ message: `Unable to create invoice. Error: ${error}` })
+    }
+}
+
+const deleteUser = async (req, res) => {
+    try {
+        const deletedUser = await User.findByIdAndDelete(req.params.id)
+        if (!deletedUser) return res.status(404).send({ message: "User not found" })
+
+        generalLogger.info(`User deleted successfully: ${deletedUser}`)
+        return res.status(200).send({ message: "User deleted successfully" })
+    } catch (error) {
+        generalLogger.error(`Error deleting user: ${error}`)
+        return res.status(500).send({ message: `Unable to delete user. Error: ${error}` })
+    }
+}
+
+const deleteAppointment = async (req, res) => {
+    try {
+        const deletedAppointment = await Appointment.findByIdAndDelete(req.params.id)
+        if (!deletedAppointment) return res.status(404).send({ message: "Appointment not found" })
+
+        generalLogger.info(`Appointment deleted successfully: ${deletedAppointment}`)
+        return res.status(200).send({ message: "Appointment deleted successfully" })
+    } catch (error) {
+        generalLogger.error(`Error deleting appointment: ${error}`)
+        return res.status(500).send({ message: `Unable to delete appointment. Error: ${error}` })
+    }
+}
+
+const deleteInvoice = async (req, res) => {
+    try {
+        const deletedInvoice = await Invoice.findByIdAndDelete(req.params.id)
+        if (!deletedInvoice) return res.status(404).send({ message: "Invoice not found" })
+
+        generalLogger.info(`Invoice deleted successfully: ${deletedInvoice}`)
+        return res.status(200).send({ message: "Invoice deleted successfully" })
+    } catch (error) {
+        generalLogger.error(`Error deleting invoice: ${error}`)
+        return res.status(500).send({ message: `Unable to delete invoice. Error: ${error}` })
+    }
+}
+
+module.exports = { 
+    getAdminDashboard, 
+    updateUser, 
+    updateAppointment, 
+    updateInvoice, 
+    createUser, 
+    createAppointment, 
+    createInvoice, 
+    deleteUser, 
+    deleteAppointment, 
+    deleteInvoice 
+}
+

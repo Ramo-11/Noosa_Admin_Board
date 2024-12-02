@@ -1,26 +1,37 @@
-const express = require("express");
-const route = express.Router();
-require("dotenv").config();
+const express = require("express")
+const route = express.Router()
+require("dotenv").config()
 
 // Import Controller Methods
 const { 
     getAdminDashboard, 
     updateUser, 
     updateAppointment, 
-    updateInvoice 
-} = require("./Controller");
+    updateInvoice, 
+    createUser, 
+    createAppointment, 
+    createInvoice, 
+    deleteUser, 
+    deleteAppointment, 
+    deleteInvoice 
+} = require("./Controller")
 
 // *********** GET Requests ***********
-route.get("/", getAdminDashboard);
+route.get("/", getAdminDashboard)
 
 // *********** PUT Requests ***********
-// Update User
-route.put("/index/users/:id", updateUser);
+route.put("/index/users/:id", updateUser)
+route.put("/index/appointments/:id", updateAppointment)
+route.put("/index/invoices/:id", updateInvoice)
 
-// Update Appointment
-route.put("/index/appointments/:id", updateAppointment);
+// *********** POST Requests **********
+route.post("/index/users", createUser)
+route.post("/index/appointments", createAppointment)
+route.post("/index/invoices", createInvoice)
 
-// Update Invoice
-route.put("/index/invoices/:id", updateInvoice);
+// *********** DELETE Requests **********
+route.delete("/index/users/:id", deleteUser)
+route.delete("/index/appointments/:id", deleteAppointment)
+route.delete("/index/invoices/:id", deleteInvoice)
 
-module.exports = route;
+module.exports = route

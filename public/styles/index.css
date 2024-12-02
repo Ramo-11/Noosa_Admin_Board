@@ -55,7 +55,7 @@ table, th, td {
 
 th, td {
     padding: 12px;
-    text-align: left;
+    text-align: center;
 }
 
 th {
@@ -64,6 +64,7 @@ th {
 
 button {
     padding: 8px 12px;
+    font-size: 14px;
     background-color: #28a745;
     color: white;
     border: none;
@@ -73,4 +74,53 @@ button {
 
 button:hover {
     background-color: #218838;
+}
+
+.delete-btn:hover {
+    background-color: rgb(250, 118, 118);
+}
+
+.userSubmitFlag, .appointmentSubmitFlag, .invoiceSubmitFlag {
+    width: 80%;
+    padding: 10px;
+    border-radius: 3px 3px 3px 3px;
+}
+
+.edit-mode {
+    width: 50%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 14px;
+    box-sizing: border-box;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.edit-mode:focus {
+    border-color: #007BFF;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+table input[type="text"],
+table input[type="email"],
+table input[type="date"],
+table input[type="time"],
+table select {
+    width: calc(100% - 16px);
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 4px 0;
+    box-sizing: border-box;
+}
+
+button.delete-btn {
+    background-color: #dc3545;
+}
+
+button.delete-btn:hover {
+    background-color: #c82333;
 }

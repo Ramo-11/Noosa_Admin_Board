@@ -1,0 +1,64 @@
+.create-form {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.create-form input,
+.create-form select,
+.create-form button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.create-form button {
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.create-form button:hover {
+    background-color: #0056b3;
+}
+
+.create-form .cancel-btn {
+    background-color: #dc3545;
+    margin-top: 10px;
+}
+
+.create-form .cancel-btn:hover {
+    background-color: #c82333;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.create-form-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
