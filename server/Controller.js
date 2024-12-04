@@ -135,14 +135,35 @@ const createAppointment = async (req, res) => {
 
 const createInvoice = async (req, res) => {
     try {
-        const { invoiceNumber, customerEmail, sessionDate, total, isPaid } = req.body
-        if (!invoiceNumber || !customerEmail || !sessionDate || total == null) 
-            return res.status(400).send({ message: "Invoice number, customer email, session date, and total amount are required" })
+        const { invoiceNumber, customerEmail, sessionDate, dueDate, price, hours, isPaid } = req.body
+        if (!invoiceNumber || !customerEmail || !sessionDate || !dueDate || !price || !hours || !isPaid) {
+        generalLogger.error(`Cannot create invoice. Not all required fields are provided`)
+            return res.status(400).send({ message: "Not all required fields are provided" })
+        }
 
         const existingInvoice = await Invoice.findOne({ invoiceNumber })
-        if (existingInvoice) return res.status(400).send({ message: "Invoice number already exists" })
+        if (existingInvoice) {
+            generalLogger.error(`Cannot create invoice. Invoice with number ${invoiceNumber} already exists`)
+            return res.status(400).send({ message: "Invoice number already exists" })
+        } 
 
-        await Invoice.create({ invoiceNumber, customerEmail, sessionDate, total, isPaid })
+        const customer = await User.findOne({ email: customerEmail })
+        if (!customer) {
+            generalLogger.error(`Cannot create invoice. Customer not found`)
+            return res.status(400).send({ message: "Customer not found" })
+        }
+
+        const newInvoice = new Invoice({
+            invoiceNumber,
+            customer: customer._id,
+            sessionDate,
+            dueDate,
+            hours,
+            price,
+            total: hours * price,
+            isPaid
+        })
+        await newInvoice.save()
 
         generalLogger.info(`Invoice created successfully`)
         return res.status(201).send({ message: "Invoice created successfully" })

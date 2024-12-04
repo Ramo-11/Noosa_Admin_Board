@@ -97,8 +97,11 @@
                 <tbody>
                     <% appointments.forEach(appointment => { %>
                         <tr id="appointment-row-<%= appointment._id %>">
-                            <td><span class="view-mode"><%= appointment.customer.email %></span>
-                                <input type="text" class="edit-mode" value="<%= appointment.customer.email %>" style="display: none">
+                            <td>
+                                <span class="view-mode">
+                                    <%= appointment.customer ? appointment.customer.email : 'Deleted User' %>
+                                </span>
+                                <input type="text" class="edit-mode" value="<%= appointment.customer ? appointment.customer.email : '' %>" style="display: none">
                             </td>
                             <td><span class="view-mode"><%= appointment.courseName %></span>
                                 <input type="text" class="edit-mode" value="<%= appointment.courseName %>" style="display: none">
@@ -136,13 +139,28 @@
             <div id="create-invoice-container" style="display:none">
                 <form id="create-invoice-form" class="create-form" onsubmit="createEntry(event, 'invoice')">
                     <button type="button" class="cancel-btn" onclick="closeForm('invoice')">Cancel</button>
-                    <input type="text" placeholder="Invoice Number" name="invoiceNumber" required>
-                    <input type="text" placeholder="Customer Email" name="customerEmail" required>
-                    <input type="date" name="sessionDate" required>
-                    <input type="number" placeholder="Amount" name="total" required>
+                    <label for="invoiceNumber">Invoice Number</label>
+                    <input id="invoiceNumber" type="text" placeholder="Invoice Number" name="invoiceNumber" required>
+                    
+                    <label for="customerEmail">Customer Email</label>
+                    <input id="customerEmail" type="email" placeholder="Customer Email" name="customerEmail" required>
+                    
+                    <label for="sessionDate">Session Date</label>
+                    <input id="sessionDate" type="date" name="sessionDate" required>
+                    
+                    <label for="dueDate">Due Date</label>
+                    <input id="dueDate" type="date" name="dueDate" required>
+                    
+                    <label for="hours">Hours</label>
+                    <input id="hours" type="number" placeholder="Hours" name="hours" required min="1">
+                    
+                    <label for="price">Price</label>
+                    <input id="price" type="number" placeholder="Price" name="price" required min="0" step="0.01">
+                    
+                    <label for="isPaid">Payment Status</label>
                     <select name="isPaid" required>
-                        <option value="true">Paid</option>
                         <option value="false">Not Paid</option>
+                        <option value="true">Paid</option>
                     </select>
                     <button type="submit">Submit</button>
                 </form>
@@ -151,9 +169,11 @@
                 <thead>
                     <tr>
                         <th>Invoice Number</th>
-                        <th>Customer</th>
+                        <th>Customer Email</th>
                         <th>Session Date</th>
-                        <th>Amount</th>
+                        <th>Due Date</th>
+                        <th>Hours</th>
+                        <th>Price</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -164,14 +184,29 @@
                             <td><span class="view-mode"><%= invoice.invoiceNumber %></span>
                                 <input type="text" class="edit-mode" value="<%= invoice.invoiceNumber %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= invoice.customer.email %></span>
-                                <input type="text" class="edit-mode" value="<%= invoice.customer.email %>" style="display: none">
+                            <td>
+                                <span class="view-mode">
+                                    <%= invoice.customer ? invoice.customer.email : 'User Deleted' %>
+                                </span>
+                                <input type="text" class="edit-mode" value="<%= invoice.customer ? invoice.customer.email : '' %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= invoice.sessionDate %></span>
+                            <td>
+                                <span class="view-mode">
+                                    <%= new Date(invoice.sessionDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) %>
+                                </span>
                                 <input type="date" class="edit-mode" value="<%= invoice.sessionDate %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= invoice.total %></span>
-                                <input type="number" class="edit-mode" value="<%= invoice.total %>" style="display: none">
+                            <td>
+                                <span class="view-mode">
+                                    <%= new Date(invoice.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) %>
+                                </span>
+                                <input type="date" class="edit-mode" value="<%= invoice.dueDate %>" style="display: none">
+                            </td>
+                            <td><span class="view-mode"><%= invoice.hours %></span>
+                                <input type="number" class="edit-mode" value="<%= invoice.hours %>" style="display: none">
+                            </td>
+                            <td><span class="view-mode"><%= invoice.price %></span>
+                                <input type="number" class="edit-mode" value="<%= invoice.price %>" style="display: none">
                             </td>
                             <td>
                                 <span class="view-mode"><%= invoice.isPaid ? 'Paid' : 'Not Paid' %></span>
