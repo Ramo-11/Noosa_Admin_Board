@@ -37,18 +37,32 @@ const updateUser = async (req, res) => {
 }
 
 const updateAppointment = async (req, res) => {
+    const { courseName, appointmentDate, appointmentTime, status } = req.body
+
+    if (!courseName || !appointmentDate || !appointmentTime || !status) {
+        generalLogger.error(`Cannot update appointment. Required fields are missing.`)
+        return res.status(400).send({ message: "Required fields are missing" })
+    }
+
     try {
-        const updatedAppointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true
-        })
+        const updatedAppointment = await Appointment.findByIdAndUpdate(
+            req.params.id,
+            {
+                courseName: courseName,
+                appointmentDate: appointmentDate,
+                appointmentTime: appointmentTime,
+                status: status
+            },
+            { new: true }
+        )
 
         if (!updatedAppointment) {
-            return res.status(404).send({ message: "Appointment not found" })
+            generalLogger.error(`Appointment not found: ${req.params.id}`)
+            return res.status(404).send({ message: "Appointment not found." })
         }
 
-        generalLogger.info(`Appointment updated successfully: ${updatedAppointment}`)
-        return res.status(200).send({ message: "Appointment updated successfully" })
+        generalLogger.info(`Appointment updated successfully: ${JSON.stringify(updatedAppointment)}`)
+        return res.status(200).send({ message: "Appointment updated successfully", updatedAppointment })
     } catch (error) {
         generalLogger.error(`Error updating appointment: ${error}`)
         return res.status(500).send({ message: `Unable to update appointment. Error: ${error}` })

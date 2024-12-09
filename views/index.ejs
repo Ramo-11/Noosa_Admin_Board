@@ -101,19 +101,23 @@
                                 <span class="view-mode">
                                     <%= appointment.customer ? appointment.customer.email : 'Deleted User' %>
                                 </span>
-                                <input type="text" class="edit-mode" value="<%= appointment.customer ? appointment.customer.email : '' %>" style="display: none">
+                                <input type="text" name="customerEmail" class="edit-mode" value="<%= appointment.customer ? appointment.customer.email : '' %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= appointment.courseName %></span>
-                                <input type="text" class="edit-mode" value="<%= appointment.courseName %>" style="display: none">
+                            <td>
+                                <span class="view-mode"><%= appointment.courseName %></span>
+                                <input type="text" name="courseName" class="edit-mode" value="<%= appointment.courseName %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= appointment.appointmentDate %></span>
-                                <input type="date" class="edit-mode" value="<%= appointment.appointmentDate %>" style="display: none">
+                            <td>
+                                <span class="view-mode"><%= appointment.appointmentDate %></span>
+                                <input type="date" name="appointmentDate" class="edit-mode" value="<%= appointment.appointmentDate %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= appointment.appointmentTime %></span>
-                                <input type="time" class="edit-mode" value="<%= appointment.appointmentTime %>" style="display: none">
+                            <td>
+                                <span class="view-mode"><%= appointment.appointmentTime %></span>
+                                <input type="text" name="appointmentTime" class="edit-mode" value="<%= appointment.appointmentTime %>" style="display: none">
                             </td>
-                            <td><span class="view-mode"><%= appointment.status %></span>
-                                <select class="edit-mode" style="display: none">
+                            <td>
+                                <span class="view-mode"><%= appointment.status %></span>
+                                <select name="status" class="edit-mode" style="display: none">
                                     <option value="Scheduled" <%= appointment.status === 'Scheduled' ? 'selected' : '' %>>Scheduled</option>
                                     <option value="Completed" <%= appointment.status === 'Completed' ? 'selected' : '' %>>Completed</option>
                                     <option value="Cancelled" <%= appointment.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
@@ -266,17 +270,18 @@
             const row = document.getElementById(`${type}-row-${rowId}`)
             const data = {}
             if (type === 'user') {
-                data.fullName = row.querySelector('input[type="text"]').value
-                data.email = row.querySelector('input[type="email"]').value
-                data.phoneNumber = row.querySelector('input[type="text"]').value
+                data.fullName = row.querySelector('input[name="fullName"]').value
+                data.email = row.querySelector('input[name="email"]').value
+                data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value
             } else if (type === 'invoice') {
-                data.invoiceNumber = row.querySelector('input[type="text"]').value
-                data.total = parseFloat(row.querySelector('input[type="number"]').value)
+                data.invoiceNumber = row.querySelector('input[name="invoiceNumber"]').value
+                data.total = parseFloat(row.querySelector('input[name="total"]').value)
                 data.isPaid = row.querySelector('select[name="isPaid"]').value === 'true'
             } else if (type === 'appointment') {
-                data.courseName = row.querySelector('input[type="text"]').value
-                data.appointmentDate = row.querySelector('input[type="date"]').value
-                data.status = row.querySelector('select').value
+                data.courseName = row.querySelector('input[name="courseName"]').value
+                data.appointmentDate = row.querySelector('input[name="appointmentDate"]').value
+                data.appointmentTime = row.querySelector('input[name="appointmentTime"]').value
+                data.status = row.querySelector('select[name="status"]').value
             }
 
             const response = await fetch(`/index/${type}s/${rowId}`, {
@@ -286,8 +291,6 @@
             })
 
             const message = await response.json()
-
-            
             
             if (response.status === 200) {
                 if (type === 'user') {
