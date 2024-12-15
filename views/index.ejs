@@ -186,7 +186,7 @@
                     <% invoices.forEach(invoice => { %>
                         <tr id="invoice-row-<%= invoice._id %>">
                             <td><span class="view-mode"><%= invoice.invoiceNumber %></span>
-                                <input type="text" class="edit-mode" value="<%= invoice.invoiceNumber %>" style="display: none">
+                                <input type="text" name="invoiceNumber" class="edit-mode" value="<%= invoice.invoiceNumber %>" style="display: none">
                             </td>
                             <td>
                                 <span class="view-mode">
@@ -195,22 +195,18 @@
                                 <input type="text" class="edit-mode" value="<%= invoice.customer ? invoice.customer.email : '' %>" style="display: none">
                             </td>
                             <td>
-                                <span class="view-mode">
-                                    <%= new Date(invoice.sessionDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) %>
-                                </span>
-                                <input type="date" class="edit-mode" value="<%= invoice.sessionDate %>" style="display: none">
+                                <span class="view-mode"><%= invoice.sessionDate %></span>
+                                <input type="date" name="sessionDate" class="edit-mode" value="<%= invoice.sessionDate %>" style="display: none">
                             </td>
                             <td>
-                                <span class="view-mode">
-                                    <%= new Date(invoice.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) %>
-                                </span>
-                                <input type="date" class="edit-mode" value="<%= invoice.dueDate %>" style="display: none">
+                                <span class="view-mode"><%= invoice.dueDate %></span>
+                                <input type="date" name="dueDate" class="edit-mode" value="<%= invoice.dueDate %>" style="display: none">
                             </td>
                             <td><span class="view-mode"><%= invoice.hours %></span>
-                                <input type="number" class="edit-mode" value="<%= invoice.hours %>" style="display: none">
+                                <input type="number" name="hours" class="edit-mode" value="<%= invoice.hours %>" style="display: none">
                             </td>
                             <td><span class="view-mode"><%= invoice.price %></span>
-                                <input type="number" class="edit-mode" value="<%= invoice.price %>" style="display: none">
+                                <input type="number" name="price" class="edit-mode" value="<%= invoice.price %>" style="display: none">
                             </td>
                             <td>
                                 <span class="view-mode"><%= invoice.isPaid ? 'Paid' : 'Not Paid' %></span>
@@ -275,7 +271,10 @@
                 data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value
             } else if (type === 'invoice') {
                 data.invoiceNumber = row.querySelector('input[name="invoiceNumber"]').value
-                data.total = parseFloat(row.querySelector('input[name="total"]').value)
+                data.sessionDate = row.querySelector('input[name="sessionDate"]').value
+                data.dueDate = row.querySelector('input[name="dueDate"]').value
+                data.hours = parseFloat(row.querySelector('input[name="hours"]').value)
+                data.price = parseFloat(row.querySelector('input[name="price"]').value)
                 data.isPaid = row.querySelector('select[name="isPaid"]').value === 'true'
             } else if (type === 'appointment') {
                 data.courseName = row.querySelector('input[name="courseName"]').value

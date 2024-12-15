@@ -70,11 +70,27 @@ const updateAppointment = async (req, res) => {
 }
 
 const updateInvoice = async (req, res) => {
+    const { invoiceNumber, sessionDate, dueDate, hours, price, isPaid } = req.body
+
+    if (!invoiceNumber || !sessionDate || !dueDate || !hours || !price || isPaid == undefined) {
+        generalLogger.error(`Cannot update invoice. Required fields are missing.`)
+        return res.status(400).send({ message: "Required fields are missing" })
+    }
+
     try {
-        const updatedInvoice = await Invoice.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-            runValidators: true
-        })
+        const updatedInvoice = await Invoice.findByIdAndUpdate(
+            req.params.id, 
+            {
+                invoiceNumber: invoiceNumber,
+                sessionDate: sessionDate,
+                dueDate: dueDate,
+                hours: hours,
+                price: price,
+                total: hours * price,
+                isPaid: isPaid
+            },
+            { new: true }
+        )
 
         if (!updatedInvoice) {
             return res.status(404).send({ message: "Invoice not found" })

@@ -14,11 +14,11 @@ const invoiceSchema = new mongoose.Schema({
         required: true
     },
     sessionDate: {
-        type: Date,
+        type: String,
         required: true
     },
     dueDate: {
-        type: Date,
+        type: String,
         required: true
     },
     hours: {
