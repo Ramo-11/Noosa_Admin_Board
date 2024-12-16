@@ -178,6 +178,7 @@
                         <th>Due Date</th>
                         <th>Hours</th>
                         <th>Price</th>
+                        <th>Total</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -207,6 +208,9 @@
                             </td>
                             <td><span class="view-mode"><%= invoice.price %></span>
                                 <input type="number" name="price" class="edit-mode" value="<%= invoice.price %>" style="display: none">
+                            </td>
+                            <td><span class="view-mode"><%= invoice.total %></span>
+                                <input type="number" name="total" class="edit-mode" value="<%= invoice.total %>" style="display: none">
                             </td>
                             <td>
                                 <span class="view-mode"><%= invoice.isPaid ? 'Paid' : 'Not Paid' %></span>
