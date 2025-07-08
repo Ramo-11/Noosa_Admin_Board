@@ -6,443 +6,276 @@
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="/styles/index.css">
     <link rel="stylesheet" href="/styles/create.css">
+    <link rel="stylesheet" href="/styles/responsive.css">
 </head>
 <body>
     <div class="container">
-        <h1>Admin Dashboard</h1>
-        <div class="tabs">
-            <button class="tab-button" onclick="switchTab('users')">Users</button>
-            <button class="tab-button" onclick="switchTab('appointments')">Appointments</button>
-            <button class="tab-button" onclick="switchTab('invoices')">Invoices</button>
-        </div>
-
-        <div id="users" class="tab-content">
-            <h2>Users</h2>
-            <p class="userSubmitFlag" id="userSubmitFlag" hidden></p>
-            <button onclick="showCreateForm('user')">Create User</button>
-            <div class="create-form-overlay" id="create-user-overlay" style="display:none" onclick="closeForm('user')"></div>
-            <div id="create-user-container" style="display:none">
-                <form id="create-user-form" class="create-form" onsubmit="createEntry(event, 'user')">
-                    <button type="button" class="cancel-btn" onclick="closeForm('user')">Cancel</button>
-                    <input type="text" placeholder="Full Name" name="fullName" required>
-                    <input type="email" placeholder="Email" name="email" required>
-                    <input type="text" placeholder="Phone Number" name="phoneNumber">
-                    <button type="submit">Submit</button>
-                </form>
+        <header class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <div class="header-info">
+                <span class="date-time" id="current-time"></span>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% users.forEach(user => { %>
-                        <tr id="user-row-<%= user._id %>">
-                            <td><span class="view-mode"><%= user.fullName %></span>
-                                <input type="text" class="edit-mode" value="<%= user.fullName %>" style="display: none">
-                            </td>
-                            <td><span class="view-mode"><%= user.email %></span>
-                                <input type="email" class="edit-mode" value="<%= user.email %>" style="display: none">
-                            </td>
-                            <td><span class="view-mode"><%= user.phoneNumber || 'N/A' %></span>
-                                <input type="text" class="edit-mode" value="<%= user.phoneNumber %>" style="display: none">
-                            </td>
-                            <td>
-                                <button class="edit-btn" onclick="startEditing('user', '<%= user._id %>')">Edit</button>
-                                <button class="submit-btn edit-mode" onclick="submitEdit('user', '<%= user._id %>')" style="display: none">Submit</button>
-                                <button class="cancel-btn edit-mode" onclick="cancelEdit('user', '<%= user._id %>')" style="display: none">Cancel</button>
-                                <button class="delete-btn edit-mode" onclick="deleteEntry('<%= user._id %>', 'user')" style="display: none">Delete</button>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+        </header>
 
-        <div id="appointments" class="tab-content" style="display: none">
-            <h2>Appointments</h2>
-            <p class="appointmentSubmitFlag" id="appointmentSubmitFlag" hidden></p>
-            <button onclick="showCreateForm('appointment')">Create Appointment</button>
-            <div class="create-form-overlay" id="create-appointment-overlay" style="display:none" onclick="closeForm('appointment')"></div>
-            <div id="create-appointment-container" style="display:none">
-                <form id="create-appointment-form" class="create-form" onsubmit="createEntry(event, 'appointment')">
-                    <button type="button" class="cancel-btn" onclick="closeForm('appointment')">Cancel</button>
-                    <input type="text" placeholder="Customer Email" name="customerEmail" required>
-                    <input type="text" placeholder="Course Name" name="courseName" required>
-                    <input type="date" name="appointmentDate" required>
-                    <input type="text" name="appointmentTime" placeholder="12:00 PM" required pattern="^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$" title="Enter time in the format HH:MM AM/PM">
-                    <select name="status" required>
-                        <option value="Scheduled">Scheduled</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                    <button type="submit">Submit</button>
-                </form>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Course Name</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% appointments.forEach(appointment => { %>
-                        <tr id="appointment-row-<%= appointment._id %>">
-                            <td>
-                                <span class="view-mode">
-                                    <%= appointment.customer ? appointment.customer.email : 'Deleted User' %>
-                                </span>
-                                <input type="text" name="customerEmail" class="edit-mode" value="<%= appointment.customer ? appointment.customer.email : '' %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= appointment.courseName %></span>
-                                <input type="text" name="courseName" class="edit-mode" value="<%= appointment.courseName %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= appointment.appointmentDate %></span>
-                                <input type="date" name="appointmentDate" class="edit-mode" value="<%= appointment.appointmentDate %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= appointment.appointmentTime %></span>
-                                <input type="text" name="appointmentTime" class="edit-mode" value="<%= appointment.appointmentTime %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= appointment.status %></span>
-                                <select name="status" class="edit-mode" style="display: none">
-                                    <option value="Scheduled" <%= appointment.status === 'Scheduled' ? 'selected' : '' %>>Scheduled</option>
-                                    <option value="Completed" <%= appointment.status === 'Completed' ? 'selected' : '' %>>Completed</option>
-                                    <option value="Cancelled" <%= appointment.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button class="edit-btn" onclick="startEditing('appointment', '<%= appointment._id %>')">Edit</button>
-                                <button class="submit-btn edit-mode" onclick="submitEdit('appointment', '<%= appointment._id %>')" style="display: none">Submit</button>
-                                <button class="cancel-btn edit-mode" onclick="cancelEdit('appointment', '<%= appointment._id %>')" style="display: none">Cancel</button>
-                                <button class="delete-btn edit-mode" onclick="deleteEntry('<%= appointment._id %>', 'appointment')" style="display: none">Delete</button>
-                            </td>
-                        </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+        <!-- Notification area -->
+        <div class="notification" id="notification"></div>
 
-        <div id="invoices" class="tab-content" style="display: none">
-            <h2>Invoices</h2>
-            <p class="invoiceSubmitFlag" id="invoiceSubmitFlag" hidden></p>
-            <button onclick="showCreateForm('invoice')">Create Invoice</button>
-            <div class="create-form-overlay" id="create-invoice-overlay" style="display:none" onclick="closeForm('invoice')"></div>
-            <div id="create-invoice-container" style="display:none">
-                <form id="create-invoice-form" class="create-form" onsubmit="createEntry(event, 'invoice')">
-                    <button type="button" class="cancel-btn" onclick="closeForm('invoice')">Cancel</button>
-                    <label for="invoiceNumber">Invoice Number</label>
-                    <input id="invoiceNumber" type="text" placeholder="Invoice Number" name="invoiceNumber" required>
-                    
-                    <label for="customerEmail">Customer Email</label>
-                    <input id="customerEmail" type="email" placeholder="Customer Email" name="customerEmail" required>
-                    
-                    <label for="sessionDate">Session Date</label>
-                    <input id="sessionDate" type="date" name="sessionDate" required>
-                    
-                    <label for="dueDate">Due Date</label>
-                    <input id="dueDate" type="date" name="dueDate" required>
-                    
-                    <label for="hours">Hours</label>
-                    <input id="hours" type="number" placeholder="Hours" name="hours" required min="1">
-                    
-                    <label for="price">Price</label>
-                    <input id="price" type="number" placeholder="Price" name="price" required min="0" step="0.01">
-                    
-                    <label for="isPaid">Payment Status</label>
-                    <select name="isPaid" required>
-                        <option value="false">Not Paid</option>
-                        <option value="true">Paid</option>
-                    </select>
-                    <button type="submit">Submit</button>
-                </form>
+        <!-- Tab navigation -->
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="users">
+                <span class="tab-icon">👥</span>
+                Users
+            </button>
+            <button class="tab-button" data-tab="appointments">
+                <span class="tab-icon">📅</span>
+                Appointments
+            </button>
+            <button class="tab-button" data-tab="invoices">
+                <span class="tab-icon">💰</span>
+                Invoices
+            </button>
+        </nav>
+
+        <!-- Users Tab -->
+        <section id="users" class="tab-content active">
+            <div class="section-header">
+                <h2>Users Management</h2>
+                <button class="btn btn-primary" data-action="create" data-type="user">
+                    <span class="btn-icon">➕</span>
+                    Add User
+                </button>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Invoice Number</th>
-                        <th>Customer Email</th>
-                        <th>Session Date</th>
-                        <th>Due Date</th>
-                        <th>Hours</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% invoices.forEach(invoice => { %>
-                        <tr id="invoice-row-<%= invoice._id %>">
-                            <td><span class="view-mode"><%= invoice.invoiceNumber %></span>
-                                <input type="text" name="invoiceNumber" class="edit-mode" value="<%= invoice.invoiceNumber %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode">
-                                    <%= invoice.customer ? invoice.customer.email : 'User Deleted' %>
-                                </span>
-                                <input type="text" class="edit-mode" value="<%= invoice.customer ? invoice.customer.email : '' %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= invoice.sessionDate %></span>
-                                <input type="date" name="sessionDate" class="edit-mode" value="<%= invoice.sessionDate %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= invoice.dueDate %></span>
-                                <input type="date" name="dueDate" class="edit-mode" value="<%= invoice.dueDate %>" style="display: none">
-                            </td>
-                            <td><span class="view-mode"><%= invoice.hours %></span>
-                                <input type="number" name="hours" class="edit-mode" value="<%= invoice.hours %>" style="display: none">
-                            </td>
-                            <td><span class="view-mode"><%= invoice.price %></span>
-                                <input type="number" name="price" class="edit-mode" value="<%= invoice.price %>" style="display: none">
-                            </td>
-                            <td><span class="view-mode"><%= invoice.total %></span>
-                                <input type="number" name="total" class="edit-mode" value="<%= invoice.total %>" style="display: none">
-                            </td>
-                            <td>
-                                <span class="view-mode"><%= invoice.isPaid ? 'Paid' : 'Not Paid' %></span>
-                                <select class="edit-mode" style="display: none" name="isPaid">
-                                    <option value="true" <%= invoice.isPaid ? 'selected' : '' %>>Paid</option>
-                                    <option value="false" <%= !invoice.isPaid ? 'selected' : '' %>>Not Paid</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button class="edit-btn" onclick="startEditing('invoice', '<%= invoice._id %>')">Edit</button>
-                                <button class="submit-btn edit-mode" onclick="submitEdit('invoice', '<%= invoice._id %>')" style="display: none">Submit</button>
-                                <button class="cancel-btn edit-mode" onclick="cancelEdit('invoice', '<%= invoice._id %>')" style="display: none">Cancel</button>
-                                <button class="delete-btn edit-mode" onclick="deleteEntry('<%= invoice._id %>', 'invoice')" style="display: none">Delete</button>
-                            </td>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th class="hide-mobile">Phone Number</th>
+                            <th>Actions</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user => { %>
+                            <tr id="user-row-<%= user._id %>" data-id="<%= user._id %>">
+                                <td data-label="Name">
+                                    <span class="view-mode"><%= user.fullName %></span>
+                                    <input type="text" class="edit-mode" name="fullName" value="<%= user.fullName %>">
+                                </td>
+                                <td data-label="Email">
+                                    <span class="view-mode"><%= user.email %></span>
+                                    <input type="email" class="edit-mode" name="email" value="<%= user.email %>">
+                                </td>
+                                <td data-label="Phone" class="hide-mobile">
+                                    <span class="view-mode"><%= user.phoneNumber || 'N/A' %></span>
+                                    <input type="text" class="edit-mode" name="phoneNumber" value="<%= user.phoneNumber || '' %>">
+                                </td>
+                                <td data-label="Actions" class="actions-cell">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-secondary edit-btn" data-action="edit" data-type="user" data-id="<%= user._id %>">
+                                            Edit
+                                        </button>
+                                        <div class="edit-actions edit-mode">
+                                            <button class="btn btn-sm btn-success" data-action="save" data-type="user" data-id="<%= user._id %>">
+                                                Save
+                                            </button>
+                                            <button class="btn btn-sm btn-light" data-action="cancel" data-type="user" data-id="<%= user._id %>">
+                                                Cancel
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" data-action="delete" data-type="user" data-id="<%= user._id %>">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Appointments Tab -->
+        <section id="appointments" class="tab-content">
+            <div class="section-header">
+                <h2>Appointments Management</h2>
+                <button class="btn btn-primary" data-action="create" data-type="appointment">
+                    <span class="btn-icon">➕</span>
+                    Add Appointment
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Course</th>
+                            <th class="hide-mobile">Date</th>
+                            <th class="hide-mobile">Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% appointments.forEach(appointment => { %>
+                            <tr id="appointment-row-<%= appointment._id %>" data-id="<%= appointment._id %>">
+                                <td data-label="Customer">
+                                    <span class="view-mode">
+                                        <%= appointment.customer ? appointment.customer.email : 'Deleted User' %>
+                                    </span>
+                                    <input type="text" class="edit-mode" name="customerEmail" value="<%= appointment.customer ? appointment.customer.email : '' %>">
+                                </td>
+                                <td data-label="Course">
+                                    <span class="view-mode"><%= appointment.courseName %></span>
+                                    <input type="text" class="edit-mode" name="courseName" value="<%= appointment.courseName %>">
+                                </td>
+                                <td data-label="Date" class="hide-mobile">
+                                    <span class="view-mode"><%= appointment.appointmentDate %></span>
+                                    <input type="date" class="edit-mode" name="appointmentDate" value="<%= appointment.appointmentDate %>">
+                                </td>
+                                <td data-label="Time" class="hide-mobile">
+                                    <span class="view-mode"><%= appointment.appointmentTime %></span>
+                                    <input type="text" class="edit-mode" name="appointmentTime" value="<%= appointment.appointmentTime %>">
+                                </td>
+                                <td data-label="Status">
+                                    <span class="view-mode">
+                                        <span class="status-badge status-<%= appointment.status.toLowerCase() %>">
+                                            <%= appointment.status %>
+                                        </span>
+                                    </span>
+                                    <select class="edit-mode" name="status">
+                                        <option value="Scheduled" <%= appointment.status === 'Scheduled' ? 'selected' : '' %>>Scheduled</option>
+                                        <option value="Completed" <%= appointment.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+                                        <option value="Cancelled" <%= appointment.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                    </select>
+                                </td>
+                                <td data-label="Actions" class="actions-cell">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-secondary edit-btn" data-action="edit" data-type="appointment" data-id="<%= appointment._id %>">
+                                            Edit
+                                        </button>
+                                        <div class="edit-actions edit-mode">
+                                            <button class="btn btn-sm btn-success" data-action="save" data-type="appointment" data-id="<%= appointment._id %>">
+                                                Save
+                                            </button>
+                                            <button class="btn btn-sm btn-light" data-action="cancel" data-type="appointment" data-id="<%= appointment._id %>">
+                                                Cancel
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" data-action="delete" data-type="appointment" data-id="<%= appointment._id %>">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Invoices Tab -->
+        <section id="invoices" class="tab-content">
+            <div class="section-header">
+                <h2>Invoices Management</h2>
+                <button class="btn btn-primary" data-action="create" data-type="invoice">
+                    <span class="btn-icon">➕</span>
+                    Add Invoice
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th class="hide-mobile">Session Date</th>
+                            <th class="hide-mobile">Due Date</th>
+                            <th class="hide-mobile">Hours</th>
+                            <th class="hide-mobile">Price</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% invoices.forEach(invoice => { %>
+                            <tr id="invoice-row-<%= invoice._id %>" data-id="<%= invoice._id %>">
+                                <td data-label="Invoice #">
+                                    <span class="view-mode"><%= invoice.invoiceNumber %></span>
+                                    <input type="text" class="edit-mode" name="invoiceNumber" value="<%= invoice.invoiceNumber %>">
+                                </td>
+                                <td data-label="Customer">
+                                    <span class="view-mode">
+                                        <%= invoice.customer ? invoice.customer.email : 'User Deleted' %>
+                                    </span>
+                                    <input type="text" class="edit-mode" name="customerEmail" value="<%= invoice.customer ? invoice.customer.email : '' %>">
+                                </td>
+                                <td data-label="Session Date" class="hide-mobile">
+                                    <span class="view-mode"><%= invoice.sessionDate %></span>
+                                    <input type="date" class="edit-mode" name="sessionDate" value="<%= invoice.sessionDate %>">
+                                </td>
+                                <td data-label="Due Date" class="hide-mobile">
+                                    <span class="view-mode"><%= invoice.dueDate %></span>
+                                    <input type="date" class="edit-mode" name="dueDate" value="<%= invoice.dueDate %>">
+                                </td>
+                                <td data-label="Hours" class="hide-mobile">
+                                    <span class="view-mode"><%= invoice.hours %></span>
+                                    <input type="number" class="edit-mode" name="hours" value="<%= invoice.hours %>">
+                                </td>
+                                <td data-label="Price" class="hide-mobile">
+                                    <span class="view-mode">$<%= invoice.price %></span>
+                                    <input type="number" class="edit-mode" name="price" value="<%= invoice.price %>" step="0.01">
+                                </td>
+                                <td data-label="Total">
+                                    <span class="view-mode total-amount">$<%= invoice.total %></span>
+                                </td>
+                                <td data-label="Status">
+                                    <span class="view-mode">
+                                        <span class="status-badge <%= invoice.isPaid ? 'status-paid' : 'status-unpaid' %>">
+                                            <%= invoice.isPaid ? 'Paid' : 'Not Paid' %>
+                                        </span>
+                                    </span>
+                                    <select class="edit-mode" name="isPaid">
+                                        <option value="true" <%= invoice.isPaid ? 'selected' : '' %>>Paid</option>
+                                        <option value="false" <%= !invoice.isPaid ? 'selected' : '' %>>Not Paid</option>
+                                    </select>
+                                </td>
+                                <td data-label="Actions" class="actions-cell">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-secondary edit-btn" data-action="edit" data-type="invoice" data-id="<%= invoice._id %>">
+                                            Edit
+                                        </button>
+                                        <div class="edit-actions edit-mode">
+                                            <button class="btn btn-sm btn-success" data-action="save" data-type="invoice" data-id="<%= invoice._id %>">
+                                                Save
+                                            </button>
+                                            <button class="btn btn-sm btn-light" data-action="cancel" data-type="invoice" data-id="<%= invoice._id %>">
+                                                Cancel
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" data-action="delete" data-type="invoice" data-id="<%= invoice._id %>">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
-    <script>
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none')
-            document.getElementById(tabName).style.display = 'block'
-        }
+    <!-- Modal overlay -->
+    <div class="modal-overlay" id="modal-overlay"></div>
 
-        document.getElementById('users').style.display = 'block'
+    <!-- Create forms will be dynamically inserted here -->
+    <div id="modal-container"></div>
 
-        function showCreateForm(type) {
-            document.getElementById(`create-${type}-overlay`).style.display = 'block'
-            document.getElementById(`create-${type}-container`).style.display = 'block'
-            document.body.classList.add('modal-open')
-        }
-
-        function closeForm(type) {
-            document.getElementById(`create-${type}-overlay`).style.display = 'none'
-            document.getElementById(`create-${type}-container`).style.display = 'none'
-            document.body.classList.remove('modal-open')
-        }
-
-        function startEditing(type, rowId) {
-            const row = document.getElementById(`${type}-row-${rowId}`)
-            row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'none')
-            row.querySelector('.edit-btn').style.display = 'none'
-            row.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'inline-block')
-        }
-
-        function cancelEdit(type, rowId) {
-            const row = document.getElementById(`${type}-row-${rowId}`)
-            row.querySelectorAll('.view-mode').forEach(el => el.style.display = 'inline-block')
-            row.querySelector('.edit-btn').style.display = 'inline-block'
-            row.querySelectorAll('.edit-mode').forEach(el => el.style.display = 'none')
-        }
-
-        async function submitEdit(type, rowId) {
-            const row = document.getElementById(`${type}-row-${rowId}`)
-            const data = {}
-            if (type === 'user') {
-                data.fullName = row.querySelector('input[name="fullName"]').value
-                data.email = row.querySelector('input[name="email"]').value
-                data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value
-            } else if (type === 'invoice') {
-                data.invoiceNumber = row.querySelector('input[name="invoiceNumber"]').value
-                data.sessionDate = row.querySelector('input[name="sessionDate"]').value
-                data.dueDate = row.querySelector('input[name="dueDate"]').value
-                data.hours = parseFloat(row.querySelector('input[name="hours"]').value)
-                data.price = parseFloat(row.querySelector('input[name="price"]').value)
-                data.isPaid = row.querySelector('select[name="isPaid"]').value === 'true'
-            } else if (type === 'appointment') {
-                data.courseName = row.querySelector('input[name="courseName"]').value
-                data.appointmentDate = row.querySelector('input[name="appointmentDate"]').value
-                data.appointmentTime = row.querySelector('input[name="appointmentTime"]').value
-                data.status = row.querySelector('select[name="status"]').value
-            }
-
-            const response = await fetch(`/index/${type}s/${rowId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-
-            const message = await response.json()
-            
-            if (response.status === 200) {
-                if (type === 'user') {
-                    document.getElementById("userSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("userSubmitFlag").style.display = "block"
-                    document.getElementById("userSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("userSubmitFlag").style.backgroundColor = "#b7dffa"
-                } else if (type === 'appointment') {
-                    document.getElementById("appointmentSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("appointmentSubmitFlag").style.display = "block"
-                    document.getElementById("appointmentSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("appointmentSubmitFlag").style.backgroundColor = "#b7dffa"
-                } else if (type === 'invoice') {
-                    document.getElementById("invoiceSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("invoiceSubmitFlag").style.display = "block"
-                    document.getElementById("invoiceSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("invoiceSubmitFlag").style.backgroundColor = "#b7dffa"
-                }
-                await sleep(3000)
-                window.location.reload()
-            }
-            else {
-                if (type === 'user') {
-                    document.getElementById("userSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("userSubmitFlag").style.display = "block"
-                    document.getElementById("userSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("userSubmitFlag").style.backgroundColor = "#FFBABA"
-                } else if (type === 'appointment') {
-                    document.getElementById("appointmentSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("appointmentSubmitFlag").style.display = "block"
-                    document.getElementById("appointmentSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("appointmentSubmitFlag").style.backgroundColor = "#FFBABA"
-                } else if (type === 'invoice') {
-                    document.getElementById("invoiceSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("invoiceSubmitFlag").style.display = "block"
-                    document.getElementById("invoiceSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("invoiceSubmitFlag").style.backgroundColor = "#FFBABA"
-                }
-                await sleep(3000)
-            }
-        }
-
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        async function createEntry(event, type) {
-            event.preventDefault()
-            const form = event.target
-            const data = Object.fromEntries(new FormData(form))
-            const response = await fetch(`/index/${type}s`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-
-            const message = await response.json()
-
-            
-            if (response.status === 201) {
-                if (type === 'user') {
-                    document.getElementById("userSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("userSubmitFlag").style.display = "block"
-                    document.getElementById("userSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("userSubmitFlag").style.backgroundColor = "#b7dffa"
-                } else if (type === 'appointment') {
-                    document.getElementById("appointmentSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("appointmentSubmitFlag").style.display = "block"
-                    document.getElementById("appointmentSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("appointmentSubmitFlag").style.backgroundColor = "#b7dffa"
-                } else if (type === 'invoice') {
-                    document.getElementById("invoiceSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("invoiceSubmitFlag").style.display = "block"
-                    document.getElementById("invoiceSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("invoiceSubmitFlag").style.backgroundColor = "#b7dffa"
-                }
-                await sleep(3000)
-                window.location.reload()
-            }
-            else {
-                if (type === 'user') {
-                    document.getElementById("userSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("userSubmitFlag").style.display = "block"
-                    document.getElementById("userSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("userSubmitFlag").style.backgroundColor = "#FFBABA"
-                } else if (type === 'appointment') {
-                    document.getElementById("appointmentSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("appointmentSubmitFlag").style.display = "block"
-                    document.getElementById("appointmentSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("appointmentSubmitFlag").style.backgroundColor = "#FFBABA"
-                } else if (type === 'invoice') {
-                    document.getElementById("invoiceSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("invoiceSubmitFlag").style.display = "block"
-                    document.getElementById("invoiceSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("invoiceSubmitFlag").style.backgroundColor = "#FFBABA"
-                }
-                await sleep(3000)
-            }
-        }
-
-        async function deleteEntry(id, type) {
-            if (!confirm(`Are you sure you want to delete this ${type}?`)) return
-
-            const response = await fetch(`/index/${type}s/${id}`, {
-                method: 'DELETE'
-            })
-
-            const message = await response.json()
-            
-            if (response.status === 200) {
-                if (type === 'user') {
-                    document.getElementById("userSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("userSubmitFlag").style.display = "block"
-                    document.getElementById("userSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("userSubmitFlag").style.backgroundColor = "#b7dffa"
-                } else if (type === 'appointment') {
-                    document.getElementById("appointmentSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("appointmentSubmitFlag").style.display = "block"
-                    document.getElementById("appointmentSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("appointmentSubmitFlag").style.backgroundColor = "#b7dffa"
-                } else if (type === 'invoice') {
-                    document.getElementById("invoiceSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("invoiceSubmitFlag").style.display = "block"
-                    document.getElementById("invoiceSubmitFlag").style.color = "#0a3755"
-                    document.getElementById("invoiceSubmitFlag").style.backgroundColor = "#b7dffa"
-                }
-                await sleep(3000)
-                window.location.reload()
-            } else {
-                if (type === 'user') {
-                    document.getElementById("userSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("userSubmitFlag").style.display = "block"
-                    document.getElementById("userSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("userSubmitFlag").style.backgroundColor = "#FFBABA"
-                } else if (type === 'appointment') {
-                    document.getElementById("appointmentSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("appointmentSubmitFlag").style.display = "block"
-                    document.getElementById("appointmentSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("appointmentSubmitFlag").style.backgroundColor = "#FFBABA"
-                } else if (type === 'invoice') {
-                    document.getElementById("invoiceSubmitFlag").innerHTML = message["message"]
-                    document.getElementById("invoiceSubmitFlag").style.display = "block"
-                    document.getElementById("invoiceSubmitFlag").style.color = "#D8000C"
-                    document.getElementById("invoiceSubmitFlag").style.backgroundColor = "#FFBABA"
-                }
-                await sleep(3000)
-            }
-        }
-
-    </script>
+    <script src="/js/dashboard.js"></script>
 </body>
 </html>
