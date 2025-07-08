@@ -1,6 +1,11 @@
 class Dashboard {
     constructor() {
         this.currentTab = 'users';
+        this.filters = {
+            users: { search: '', sort: 'fullName-asc' },
+            appointments: { search: '', status: '', customer: '', sort: 'appointmentDate-desc' },
+            invoices: { search: '', status: '', customer: '', sort: 'dueDate-desc' }
+        };
         this.init();
     }
 
@@ -8,6 +13,7 @@ class Dashboard {
         this.setupEventListeners();
         this.updateDateTime();
         this.showTab('users');
+        this.setupFilters();
         
         // Update time every minute
         setInterval(() => this.updateDateTime(), 60000);
@@ -73,6 +79,259 @@ class Dashboard {
         });
     }
 
+    setupFilters() {
+        // Setup filters for all tabs
+        ['users', 'appointments', 'invoices'].forEach(tab => {
+            this.setupTabFilters(tab);
+        });
+    }
+
+    setupTabFilters(tab) {
+        // Search input
+        const searchInput = document.getElementById(`${tab}-search`);
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.filters[tab].search = e.target.value.toLowerCase();
+                this.applyFilters(tab);
+            });
+        }
+
+        // Sort select
+        const sortSelect = document.getElementById(`${tab}-sort`);
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                this.filters[tab].sort = e.target.value;
+                this.applyFilters(tab);
+            });
+        }
+
+        // Status filter (for appointments and invoices)
+        const statusFilter = document.getElementById(`${tab}-status-filter`);
+        if (statusFilter) {
+            statusFilter.addEventListener('change', (e) => {
+                this.filters[tab].status = e.target.value.toLowerCase();
+                this.applyFilters(tab);
+            });
+        }
+
+        // Customer filter (for appointments and invoices)
+        const customerFilter = document.getElementById(`${tab}-customer-filter`);
+        if (customerFilter) {
+            customerFilter.addEventListener('change', (e) => {
+                this.filters[tab].customer = e.target.value.toLowerCase();
+                this.applyFilters(tab);
+            });
+        }
+
+        // Clear filters button
+        const clearButton = document.getElementById(`${tab}-clear-filters`);
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                this.clearFilters(tab);
+            });
+        }
+    }
+
+    applyFilters(tab) {
+        const rows = document.querySelectorAll(`#${tab} tbody tr`);
+        const filters = this.filters[tab];
+        let visibleCount = 0;
+
+        // Convert rows to array for sorting
+        const rowsArray = Array.from(rows);
+
+        // Filter rows
+        const filteredRows = rowsArray.filter(row => {
+            let show = true;
+
+            // Search filter
+            if (filters.search) {
+                const searchableText = this.getSearchableText(row, tab).toLowerCase();
+                show = show && searchableText.includes(filters.search);
+            }
+
+            // Status filter
+            if (filters.status && tab !== 'users') {
+                const rowStatus = row.dataset.status || row.dataset.paid;
+                show = show && rowStatus === filters.status;
+            }
+
+            // Customer filter
+            if (filters.customer && tab !== 'users') {
+                const rowCustomer = row.dataset.customer;
+                show = show && rowCustomer === filters.customer;
+            }
+
+            return show;
+        });
+
+        // Sort filtered rows
+        const sortedRows = this.sortRows(filteredRows, filters.sort, tab);
+
+        // Hide all rows first
+        rowsArray.forEach(row => {
+            row.classList.add('hidden');
+        });
+
+        // Show and reorder filtered rows
+        const tbody = document.querySelector(`#${tab} tbody`);
+        sortedRows.forEach((row, index) => {
+            row.classList.remove('hidden');
+            tbody.appendChild(row); // This reorders the row
+            visibleCount++;
+        });
+
+        // Update count
+        this.updateResultsCount(tab, visibleCount);
+
+        // Show/hide no results message
+        this.toggleNoResultsMessage(tab, visibleCount === 0);
+    }
+
+    getSearchableText(row, tab) {
+        switch (tab) {
+            case 'users':
+                return `${row.dataset.name} ${row.dataset.email} ${row.dataset.phone}`;
+            case 'appointments':
+                return `${row.dataset.customerName} ${row.dataset.customer} ${row.dataset.course}`;
+            case 'invoices':
+                return `${row.dataset.invoiceNumber} ${row.dataset.customerName} ${row.dataset.customer}`;
+            default:
+                return '';
+        }
+    }
+
+    sortRows(rows, sortOption, tab) {
+        const [field, direction] = sortOption.split('-');
+        
+        return rows.sort((a, b) => {
+            let aValue, bValue;
+
+            switch (field) {
+                case 'fullName':
+                    aValue = a.dataset.name;
+                    bValue = b.dataset.name;
+                    break;
+                case 'email':
+                    aValue = a.dataset.email;
+                    bValue = b.dataset.email;
+                    break;
+                case 'customer':
+                    aValue = a.dataset.customerName || a.dataset.customer;
+                    bValue = b.dataset.customerName || b.dataset.customer;
+                    break;
+                case 'courseName':
+                    aValue = a.dataset.course;
+                    bValue = b.dataset.course;
+                    break;
+                case 'appointmentDate':
+                    aValue = new Date(a.dataset.date);
+                    bValue = new Date(b.dataset.date);
+                    break;
+                case 'dueDate':
+                    aValue = new Date(a.dataset.dueDate);
+                    bValue = new Date(b.dataset.dueDate);
+                    break;
+                case 'total':
+                    aValue = parseFloat(a.dataset.total) || 0;
+                    bValue = parseFloat(b.dataset.total) || 0;
+                    break;
+                case 'status':
+                    aValue = a.dataset.status;
+                    bValue = b.dataset.status;
+                    break;
+                case 'isPaid':
+                    aValue = a.dataset.paid === 'paid' ? 1 : 0;
+                    bValue = b.dataset.paid === 'paid' ? 1 : 0;
+                    break;
+                case 'invoiceNumber':
+                    aValue = a.dataset.invoiceNumber;
+                    bValue = b.dataset.invoiceNumber;
+                    break;
+                case 'createdAt':
+                    aValue = new Date(a.dataset.created);
+                    bValue = new Date(b.dataset.created);
+                    break;
+                default:
+                    aValue = '';
+                    bValue = '';
+            }
+
+            // Handle different data types
+            if (aValue instanceof Date && bValue instanceof Date) {
+                return direction === 'asc' ? aValue - bValue : bValue - aValue;
+            } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return direction === 'asc' ? aValue - bValue : bValue - aValue;
+            } else {
+                // String comparison
+                aValue = String(aValue || '').toLowerCase();
+                bValue = String(bValue || '').toLowerCase();
+                if (direction === 'asc') {
+                    return aValue.localeCompare(bValue);
+                } else {
+                    return bValue.localeCompare(aValue);
+                }
+            }
+        });
+    }
+
+    updateResultsCount(tab, count) {
+        const countElement = document.getElementById(`${tab}-count`);
+        if (countElement) {
+            const itemName = tab === 'users' ? 'user' : tab.slice(0, -1); // Remove 's' from end
+            countElement.textContent = `${count} ${itemName}${count !== 1 ? 's' : ''}`;
+        }
+    }
+
+    toggleNoResultsMessage(tab, show) {
+        let noResultsDiv = document.querySelector(`#${tab} .no-results`);
+        
+        if (show && !noResultsDiv) {
+            // Create no results message
+            noResultsDiv = document.createElement('div');
+            noResultsDiv.className = 'no-results';
+            noResultsDiv.innerHTML = `
+                <div class="no-results-icon">🔍</div>
+                <div>No results found matching your filters</div>
+            `;
+            
+            const tableContainer = document.querySelector(`#${tab} .table-container`);
+            tableContainer.appendChild(noResultsDiv);
+        } else if (!show && noResultsDiv) {
+            noResultsDiv.remove();
+        }
+    }
+
+    clearFilters(tab) {
+        // Reset filter values
+        this.filters[tab] = {
+            search: '',
+            sort: tab === 'users' ? 'fullName-asc' : 
+                  tab === 'appointments' ? 'appointmentDate-desc' : 'dueDate-desc'
+        };
+
+        if (tab !== 'users') {
+            this.filters[tab].status = '';
+            this.filters[tab].customer = '';
+        }
+
+        // Reset form elements
+        const searchInput = document.getElementById(`${tab}-search`);
+        if (searchInput) searchInput.value = '';
+
+        const sortSelect = document.getElementById(`${tab}-sort`);
+        if (sortSelect) sortSelect.value = this.filters[tab].sort;
+
+        const statusFilter = document.getElementById(`${tab}-status-filter`);
+        if (statusFilter) statusFilter.value = '';
+
+        const customerFilter = document.getElementById(`${tab}-customer-filter`);
+        if (customerFilter) customerFilter.value = '';
+
+        // Apply cleared filters
+        this.applyFilters(tab);
+    }
+
     updateDateTime() {
         const now = new Date();
         const options = {
@@ -100,6 +359,9 @@ class Dashboard {
         document.getElementById(tabName).classList.add('active');
 
         this.currentTab = tabName;
+
+        // Apply filters for the current tab
+        this.applyFilters(tabName);
     }
 
     showCreateForm(type) {

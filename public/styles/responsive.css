@@ -16,6 +16,24 @@
         gap: 15px;
     }
     
+    .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .filter-actions {
+        margin-left: 0;
+        justify-content: space-between;
+    }
+    
+    .search-input,
+    .filter-select,
+    .sort-select {
+        min-width: auto;
+        width: 100%;
+    }
+    
     .data-table th,
     .data-table td {
         padding: 12px;
@@ -53,6 +71,28 @@
         font-size: 1.25rem;
     }
     
+    /* Mobile filter styles */
+    .filters-container {
+        padding: 16px;
+        gap: 12px;
+    }
+    
+    .search-group,
+    .filter-group,
+    .sort-group {
+        width: 100%;
+    }
+    
+    .filter-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .results-count {
+        text-align: center;
+    }
+    
     /* Hide less important columns on mobile */
     .hide-mobile {
         display: none;
@@ -79,6 +119,10 @@
     .data-table tbody tr:hover {
         background: white;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .data-table tbody tr.hidden {
+        display: none;
     }
     
     .data-table tbody td {

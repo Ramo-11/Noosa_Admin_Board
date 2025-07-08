@@ -46,6 +46,27 @@
                 </button>
             </div>
 
+            <!-- Filters for Users -->
+            <div class="filters-container">
+                <div class="search-group">
+                    <input type="text" id="users-search" placeholder="Search users..." class="search-input">
+                </div>
+                <div class="sort-group">
+                    <select id="users-sort" class="sort-select">
+                        <option value="fullName-asc">Name (A-Z)</option>
+                        <option value="fullName-desc">Name (Z-A)</option>
+                        <option value="email-asc">Email (A-Z)</option>
+                        <option value="email-desc">Email (Z-A)</option>
+                        <option value="createdAt-desc">Newest First</option>
+                        <option value="createdAt-asc">Oldest First</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-light btn-sm" id="users-clear-filters">Clear Filters</button>
+                    <span class="results-count" id="users-count"><%= users.length %> users</span>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -58,7 +79,11 @@
                     </thead>
                     <tbody>
                         <% users.forEach(user => { %>
-                            <tr id="user-row-<%= user._id %>" data-id="<%= user._id %>">
+                            <tr id="user-row-<%= user._id %>" data-id="<%= user._id %>" 
+                                data-name="<%= user.fullName.toLowerCase() %>" 
+                                data-email="<%= user.email.toLowerCase() %>"
+                                data-phone="<%= (user.phoneNumber || '').toLowerCase() %>"
+                                data-created="<%= user.createdAt %>">
                                 <td data-label="Name">
                                     <span class="view-mode"><%= user.fullName %></span>
                                     <input type="text" class="edit-mode" name="fullName" value="<%= user.fullName %>">
@@ -106,6 +131,43 @@
                 </button>
             </div>
 
+            <!-- Filters for Appointments -->
+            <div class="filters-container">
+                <div class="search-group">
+                    <input type="text" id="appointments-search" placeholder="Search appointments..." class="search-input">
+                </div>
+                <div class="filter-group">
+                    <select id="appointments-status-filter" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="appointments-customer-filter" class="filter-select">
+                        <option value="">All Customers</option>
+                        <% users.forEach(user => { %>
+                            <option value="<%= user.email.toLowerCase() %>"><%= user.fullName %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="sort-group">
+                    <select id="appointments-sort" class="sort-select">
+                        <option value="appointmentDate-desc">Date (Newest)</option>
+                        <option value="appointmentDate-asc">Date (Oldest)</option>
+                        <option value="customer-asc">Customer (A-Z)</option>
+                        <option value="customer-desc">Customer (Z-A)</option>
+                        <option value="courseName-asc">Course (A-Z)</option>
+                        <option value="status-asc">Status (A-Z)</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-light btn-sm" id="appointments-clear-filters">Clear Filters</button>
+                    <span class="results-count" id="appointments-count"><%= appointments.length %> appointments</span>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -120,7 +182,13 @@
                     </thead>
                     <tbody>
                         <% appointments.forEach(appointment => { %>
-                            <tr id="appointment-row-<%= appointment._id %>" data-id="<%= appointment._id %>">
+                            <tr id="appointment-row-<%= appointment._id %>" data-id="<%= appointment._id %>"
+                                data-customer="<%= appointment.customer ? appointment.customer.email.toLowerCase() : 'deleted user' %>"
+                                data-customer-name="<%= appointment.customer ? appointment.customer.fullName.toLowerCase() : 'deleted user' %>"
+                                data-course="<%= appointment.courseName.toLowerCase() %>"
+                                data-date="<%= appointment.appointmentDate %>"
+                                data-status="<%= appointment.status.toLowerCase() %>"
+                                data-created="<%= appointment.createdAt %>">
                                 <td data-label="Customer">
                                     <span class="view-mode">
                                         <%= appointment.customer ? appointment.customer.email : 'Deleted User' %>
@@ -186,6 +254,43 @@
                 </button>
             </div>
 
+            <!-- Filters for Invoices -->
+            <div class="filters-container">
+                <div class="search-group">
+                    <input type="text" id="invoices-search" placeholder="Search invoices..." class="search-input">
+                </div>
+                <div class="filter-group">
+                    <select id="invoices-status-filter" class="filter-select">
+                        <option value="">All Payment Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Not Paid</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <select id="invoices-customer-filter" class="filter-select">
+                        <option value="">All Customers</option>
+                        <% users.forEach(user => { %>
+                            <option value="<%= user.email.toLowerCase() %>"><%= user.fullName %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="sort-group">
+                    <select id="invoices-sort" class="sort-select">
+                        <option value="dueDate-desc">Due Date (Latest)</option>
+                        <option value="dueDate-asc">Due Date (Earliest)</option>
+                        <option value="total-desc">Total (High to Low)</option>
+                        <option value="total-asc">Total (Low to High)</option>
+                        <option value="customer-asc">Customer (A-Z)</option>
+                        <option value="invoiceNumber-asc">Invoice # (A-Z)</option>
+                        <option value="isPaid-asc">Payment Status</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-light btn-sm" id="invoices-clear-filters">Clear Filters</button>
+                    <span class="results-count" id="invoices-count"><%= invoices.length %> invoices</span>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -203,7 +308,15 @@
                     </thead>
                     <tbody>
                         <% invoices.forEach(invoice => { %>
-                            <tr id="invoice-row-<%= invoice._id %>" data-id="<%= invoice._id %>">
+                            <tr id="invoice-row-<%= invoice._id %>" data-id="<%= invoice._id %>"
+                                data-invoice-number="<%= invoice.invoiceNumber.toLowerCase() %>"
+                                data-customer="<%= invoice.customer ? invoice.customer.email.toLowerCase() : 'user deleted' %>"
+                                data-customer-name="<%= invoice.customer ? invoice.customer.fullName.toLowerCase() : 'user deleted' %>"
+                                data-session-date="<%= invoice.sessionDate %>"
+                                data-due-date="<%= invoice.dueDate %>"
+                                data-total="<%= invoice.total %>"
+                                data-paid="<%= invoice.isPaid ? 'paid' : 'unpaid' %>"
+                                data-created="<%= invoice.createdAt %>">
                                 <td data-label="Invoice #">
                                     <span class="view-mode"><%= invoice.invoiceNumber %></span>
                                     <input type="text" class="edit-mode" name="invoiceNumber" value="<%= invoice.invoiceNumber %>">
