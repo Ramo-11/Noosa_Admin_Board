@@ -4,6 +4,52 @@ const Invoice = require('../models/Invoice')
 const { generalLogger } = require("./utils/generalLogger")
 const bcrypt = require('bcrypt')
 
+// Invoice number generator utility
+class InvoiceNumberGenerator {
+    static async generateUniqueInvoiceNumber() {
+        let attempts = 0;
+        const maxAttempts = 100; // Prevent infinite loop
+
+        while (attempts < maxAttempts) {
+            // Generate 5-digit number (00000 to 99999)
+            const number = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+            
+            // Check if this number already exists in database
+            const existingInvoice = await Invoice.findOne({ invoiceNumber: number });
+            
+            if (!existingInvoice) {
+                return number;
+            }
+            
+            attempts++;
+        }
+        
+        // If we can't generate a unique number after 100 attempts, 
+        // fall back to timestamp-based generation
+        const timestamp = Date.now().toString();
+        const fallbackNumber = timestamp.slice(-5);
+        
+        // Check if fallback number exists
+        const existingFallback = await Invoice.findOne({ invoiceNumber: fallbackNumber });
+        if (!existingFallback) {
+            return fallbackNumber;
+        }
+        
+        // Last resort: increment from the fallback
+        let increment = 1;
+        while (increment < 1000) {
+            const incrementedNumber = (parseInt(fallbackNumber) + increment).toString().padStart(5, '0');
+            const existing = await Invoice.findOne({ invoiceNumber: incrementedNumber });
+            if (!existing) {
+                return incrementedNumber;
+            }
+            increment++;
+        }
+        
+        throw new Error('Unable to generate unique invoice number');
+    }
+}
+
 const getAdminDashboard = async (req, res) => {
     try {
         const users = await User.find()
@@ -14,6 +60,17 @@ const getAdminDashboard = async (req, res) => {
     } catch (error) {
         generalLogger.error(`Error getting admin dashboard: ${error.message}`)
         res.status(500).send("Server Error")
+    }
+}
+
+const generateInvoiceNumber = async (req, res) => {
+    try {
+        const invoiceNumber = await InvoiceNumberGenerator.generateUniqueInvoiceNumber();
+        generalLogger.info(`Generated new invoice number: ${invoiceNumber}`);
+        return res.status(200).json({ invoiceNumber });
+    } catch (error) {
+        generalLogger.error(`Error generating invoice number: ${error}`);
+        return res.status(500).json({ message: 'Unable to generate invoice number' });
     }
 }
 
@@ -166,7 +223,7 @@ const createAppointment = async (req, res) => {
 const createInvoice = async (req, res) => {
     try {
         const { invoiceNumber, customerEmail, sessionDate, dueDate, price, hours, isPaid } = req.body
-        if (!invoiceNumber || !customerEmail || !sessionDate || !dueDate || !price || !hours || !isPaid) {
+        if (!invoiceNumber || !customerEmail || !sessionDate || !dueDate || !price || !hours || isPaid === undefined) {
         generalLogger.error(`Cannot create invoice. Not all required fields are provided`)
             return res.status(400).send({ message: "Not all required fields are provided" })
         }
@@ -244,6 +301,7 @@ const deleteInvoice = async (req, res) => {
 
 module.exports = { 
     getAdminDashboard, 
+    generateInvoiceNumber,
     updateUser, 
     updateAppointment, 
     updateInvoice, 
@@ -254,4 +312,3 @@ module.exports = {
     deleteAppointment, 
     deleteInvoice 
 }
-

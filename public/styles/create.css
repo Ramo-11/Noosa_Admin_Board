@@ -1,4 +1,63 @@
-/* Modal styles */
+/* Invoice number container */
+.invoice-number-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.invoice-number-container input {
+    flex: 1;
+    background-color: #f8fafc;
+    border-color: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.invoice-number-container input:focus {
+    border-color: #d1d5db;
+    box-shadow: none;
+}
+
+.invoice-number-container button {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    min-width: auto;
+    flex-shrink: 0;
+}
+
+.form-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Loading state for invoice generation */
+.invoice-number-container button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.invoice-number-container button.loading {
+    position: relative;
+    color: transparent;
+}
+
+.invoice-number-container button.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}/* Modal styles */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -249,6 +308,16 @@
     .form-actions .btn {
         width: 100%;
         min-width: auto;
+    }
+    
+    .invoice-number-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .invoice-number-container button {
+        width: 100%;
+        margin-top: 8px;
     }
 }
 

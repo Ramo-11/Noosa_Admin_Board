@@ -374,11 +374,74 @@ class Dashboard {
         modalContainer.style.display = 'block';
         document.body.style.overflow = 'hidden';
 
+        // Special handling for invoice form
+        if (type === 'invoice') {
+            this.setupInvoiceForm();
+        }
+
         // Focus first input
         setTimeout(() => {
-            const firstInput = modalContainer.querySelector('input, select');
+            const firstInput = modalContainer.querySelector('input:not([readonly]), select');
             if (firstInput) firstInput.focus();
         }, 100);
+    }
+
+    async setupInvoiceForm() {
+        // Generate initial invoice number
+        await this.generateInvoiceNumber();
+
+        // Setup regenerate button
+        const regenerateBtn = document.getElementById('regenerate-invoice-btn');
+        if (regenerateBtn) {
+            regenerateBtn.addEventListener('click', () => {
+                this.generateInvoiceNumber();
+            });
+        }
+
+        // Auto-fill due date when session date changes
+        const sessionDateInput = document.getElementById('sessionDate');
+        const dueDateInput = document.getElementById('dueDate');
+        if (sessionDateInput && dueDateInput) {
+            sessionDateInput.addEventListener('change', (e) => {
+                dueDateInput.value = e.target.value;
+            });
+        }
+    }
+
+    async generateInvoiceNumber() {
+        const invoiceNumberInput = document.getElementById('invoiceNumber');
+        const regenerateBtn = document.getElementById('regenerate-invoice-btn');
+
+        if (!invoiceNumberInput) return;
+
+        try {
+            // Show loading state
+            if (regenerateBtn) {
+                regenerateBtn.disabled = true;
+                regenerateBtn.textContent = '🔄 Generating...';
+            }
+            invoiceNumberInput.value = 'Generating...';
+
+            const response = await fetch('/api/generate-invoice-number');
+            const data = await response.json();
+
+            if (response.ok) {
+                invoiceNumberInput.value = data.invoiceNumber;
+                this.showNotification('success', `Generated invoice number: ${data.invoiceNumber}`);
+            } else {
+                throw new Error(data.message || 'Failed to generate invoice number');
+            }
+        } catch (error) {
+            console.error('Error generating invoice number:', error);
+            invoiceNumberInput.value = '';
+            this.showNotification('error', 'Failed to generate invoice number. Please try again.');
+        } finally {
+            // Reset button state
+            if (regenerateBtn) {
+                regenerateBtn.disabled = false;
+                regenerateBtn.textContent = '🔄 Generate New';
+            }
+        }
     }
 
     closeModal() {
@@ -474,8 +537,14 @@ class Dashboard {
                         <div class="form-body">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="invoiceNumber">Invoice Number *</label>
-                                    <input type="text" id="invoiceNumber" name="invoiceNumber" required>
+                                    <label for="invoiceNumber">Invoice Number</label>
+                                    <div class="invoice-number-container">
+                                        <input type="text" id="invoiceNumber" name="invoiceNumber" required>
+                                        <button type="button" class="btn btn-sm btn-secondary" id="regenerate-invoice-btn">
+                                            🔄 Generate New
+                                        </button>
+                                    </div>
+                                    <small class="form-hint">Auto-generated 5-digit unique number</small>
                                 </div>
                                 <div class="form-group">
                                     <label for="customerEmail">Customer Email *</label>

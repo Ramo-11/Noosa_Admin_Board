@@ -5,6 +5,7 @@ require("dotenv").config()
 // Import Controller Methods
 const { 
     getAdminDashboard, 
+    generateInvoiceNumber,
     updateUser, 
     updateAppointment, 
     updateInvoice, 
@@ -18,6 +19,7 @@ const {
 
 // *********** GET Requests ***********
 route.get("/", getAdminDashboard)
+route.get("/api/generate-invoice-number", generateInvoiceNumber)
 
 // *********** PUT Requests ***********
 route.put("/index/users/:id", updateUser)
