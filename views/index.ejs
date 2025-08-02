@@ -74,6 +74,7 @@
                             <th>Full Name</th>
                             <th>Email</th>
                             <th class="hide-mobile">Phone Number</th>
+                            <th>isAdmin</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -83,6 +84,7 @@
                                 data-name="<%= user.fullName.toLowerCase() %>" 
                                 data-email="<%= user.email.toLowerCase() %>"
                                 data-phone="<%= (user.phoneNumber || '').toLowerCase() %>"
+                                data-isAdmin="<%= user.isAdmin %>"
                                 data-created="<%= user.createdAt %>">
                                 <td data-label="Name">
                                     <span class="view-mode"><%= user.fullName %></span>
@@ -95,6 +97,13 @@
                                 <td data-label="Phone" class="hide-mobile">
                                     <span class="view-mode"><%= user.phoneNumber || 'N/A' %></span>
                                     <input type="text" class="edit-mode" name="phoneNumber" value="<%= user.phoneNumber || '' %>">
+                                </td>
+                                <td data-isAdmin="Is Admin" class="hide-mobile">
+                                    <span class="view-mode"><%= user.isAdmin %></span>
+                                    <select class="edit-mode" name="isAdmin">
+                                        <option value="true" <%= user.isAdmin ? 'selected' : '' %>>true</option>
+                                        <option value="false" <%= !user.isAdmin ? 'selected' : '' %>>false</option>
+                                    </select>
                                 </td>
                                 <td data-label="Actions" class="actions-cell">
                                     <div class="action-buttons">
