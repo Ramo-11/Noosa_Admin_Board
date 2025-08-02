@@ -664,6 +664,7 @@ class Dashboard {
                 data.fullName = row.querySelector('input[name="fullName"]').value;
                 data.email = row.querySelector('input[name="email"]').value;
                 data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value;
+                data.isAdmin = row.querySelector('select[name="isAdmin"]').value === 'true';
                 break;
             case 'appointment':
                 data.courseName = row.querySelector('input[name="courseName"]').value;
