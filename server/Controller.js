@@ -66,7 +66,6 @@ const getAdminDashboard = async (req, res) => {
 const generateInvoiceNumber = async (req, res) => {
     try {
         const invoiceNumber = await InvoiceNumberGenerator.generateUniqueInvoiceNumber();
-        generalLogger.info(`Generated new invoice number: ${invoiceNumber}`);
         return res.status(200).json({ invoiceNumber });
     } catch (error) {
         generalLogger.error(`Error generating invoice number: ${error}`);

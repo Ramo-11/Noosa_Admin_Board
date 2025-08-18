@@ -639,7 +639,6 @@ class Dashboard {
             if (response.ok) {
                 const result = await response.json();
                 this.showNotification('success', result.message);
-                setTimeout(() => window.location.reload(), 1500);
             } else {
                 const error = await response.json();
                 this.showNotification('error', error.message);
@@ -709,7 +708,6 @@ class Dashboard {
                 const result = await response.json();
                 this.showNotification('success', result.message);
                 this.closeModal();
-                setTimeout(() => window.location.reload(), 1500);
             } else {
                 const error = await response.json();
                 this.showNotification('error', error.message);
@@ -733,7 +731,6 @@ class Dashboard {
             if (response.ok) {
                 const result = await response.json();
                 this.showNotification('success', result.message);
-                setTimeout(() => window.location.reload(), 1500);
             } else {
                 const error = await response.json();
                 this.showNotification('error', error.message);

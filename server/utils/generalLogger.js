@@ -9,7 +9,8 @@ const customFormat = format.combine(
 const generalLogger = createLogger({
     format: customFormat,
     transports: [
-        new transports.File({filename: "./logs/general.log", level: "silly"})
+        new transports.File({filename: "./logs/general.log", level: "silly"}),
+        new transports.Console({ level: "silly" })
     ]
 })
 
