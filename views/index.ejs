@@ -6,6 +6,7 @@
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="/styles/index.css">
     <link rel="stylesheet" href="/styles/create.css">
+    <link rel="stylesheet" href="/styles/stats.css">
     <link rel="stylesheet" href="/styles/responsive.css">
 </head>
 <body>
@@ -19,6 +20,17 @@
 
         <!-- Notification area -->
         <div class="notification" id="notification"></div>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="stats-header">
+                <h2>Dashboard Overview</h2>
+                <span class="stats-timestamp">Live Statistics</span>
+            </div>
+            <div id="stats-container">
+                <!-- Stats will be dynamically inserted here -->
+            </div>
+        </section>
 
         <!-- Tab navigation -->
         <nav class="tabs">
@@ -399,5 +411,6 @@
     <div id="modal-container"></div>
 
     <script src="/js/dashboard.js"></script>
+    <script src="/js/stats.js"></script>
 </body>
 </html>

@@ -290,7 +290,7 @@ const deleteInvoice = async (req, res) => {
         const deletedInvoice = await Invoice.findByIdAndDelete(req.params.id)
         if (!deletedInvoice) return res.status(404).send({ message: "Invoice not found" })
 
-        generalLogger.info(`Invoice deleted successfully: ${deletedInvoice}`)
+        generalLogger.info(`Invoice deleted successfully`)
         return res.status(200).send({ message: "Invoice deleted successfully" })
     } catch (error) {
         generalLogger.error(`Error deleting invoice: ${error}`)

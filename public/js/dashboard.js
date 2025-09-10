@@ -1,6 +1,6 @@
 class Dashboard {
     constructor() {
-        this.currentTab = 'users';
+        this.currentTab = this.getStoredTab() || 'users'; // Get stored tab or default to 'users'
         this.filters = {
             users: { search: '', sort: 'fullName-asc' },
             appointments: { search: '', status: '', customer: '', sort: 'appointmentDate-desc' },
@@ -12,11 +12,39 @@ class Dashboard {
     init() {
         this.setupEventListeners();
         this.updateDateTime();
-        this.showTab('users');
+        this.showTab(this.currentTab);
         this.setupFilters();
         
         // Update time every minute
         setInterval(() => this.updateDateTime(), 60000);
+    }
+
+    // Get stored tab from localStorage
+    getStoredTab() {
+        try {
+            return localStorage.getItem('currentTab');
+        } catch (e) {
+            // If localStorage is not available, use sessionStorage as fallback
+            try {
+                return sessionStorage.getItem('currentTab');
+            } catch (e) {
+                return null;
+            }
+        }
+    }
+
+    // Store current tab in localStorage
+    storeCurrentTab(tabName) {
+        try {
+            localStorage.setItem('currentTab', tabName);
+        } catch (e) {
+            // Fallback to sessionStorage if localStorage is not available
+            try {
+                sessionStorage.setItem('currentTab', tabName);
+            } catch (e) {
+                // If both fail, just continue without storing
+            }
+        }
     }
 
     setupEventListeners() {
@@ -359,9 +387,15 @@ class Dashboard {
         document.getElementById(tabName).classList.add('active');
 
         this.currentTab = tabName;
+        this.storeCurrentTab(tabName); // Store the current tab
 
         // Apply filters for the current tab
         this.applyFilters(tabName);
+
+        // Update stats when switching tabs
+        if (window.statsManager) {
+            window.statsManager.refresh();
+        }
     }
 
     showCreateForm(type) {
@@ -427,14 +461,16 @@ class Dashboard {
 
             if (response.ok) {
                 invoiceNumberInput.value = data.invoiceNumber;
-                this.showNotification('success', `Generated invoice number: ${data.invoiceNumber}`);
+                // Remove this line - don't show notification when just generating a number for the form
+                // this.showNotification('success', `Generated invoice number: ${data.invoiceNumber}`);
             } else {
                 throw new Error(data.message || 'Failed to generate invoice number');
             }
         } catch (error) {
             console.error('Error generating invoice number:', error);
             invoiceNumberInput.value = '';
-            this.showNotification('error', 'Failed to generate invoice number. Please try again.');
+            // Change this to just show an alert instead of using showNotification
+            alert('Failed to generate invoice number. Please try again.');
         } finally {
             // Reset button state
             if (regenerateBtn) {
@@ -760,6 +796,9 @@ class Dashboard {
         notification.className = `notification ${type}`;
         notification.textContent = message;
         notification.style.display = 'block';
+
+        // Store current tab before reload
+        this.storeCurrentTab(this.currentTab);
 
         setTimeout(() => {
             notification.style.display = 'none';
