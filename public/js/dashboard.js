@@ -763,7 +763,8 @@ class Dashboard {
 
         setTimeout(() => {
             notification.style.display = 'none';
-        }, 5000);
+            window.location.reload();
+        }, 1000);
     }
 }
 

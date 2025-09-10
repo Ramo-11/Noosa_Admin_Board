@@ -152,7 +152,7 @@ const updateInvoice = async (req, res) => {
             return res.status(404).send({ message: "Invoice not found" })
         }
 
-        generalLogger.info(`Invoice updated successfully: ${updatedInvoice}`)
+        generalLogger.info(`Invoice updated successfully`)
         return res.status(200).send({ message: "Invoice updated successfully" })
     } catch (error) {
         generalLogger.error(`Error updating invoice: ${error}`)
