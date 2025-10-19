@@ -4,7 +4,7 @@ class Dashboard {
         this.filters = {
             users: { search: '', sort: 'fullName-asc' },
             appointments: { search: '', status: '', customer: '', sort: 'appointmentDate-desc' },
-            invoices: { search: '', status: '', customer: '', sort: 'dueDate-desc' }
+            invoices: { search: '', status: '', customer: '', sort: 'dueDate-desc' },
         };
         this.init();
     }
@@ -14,7 +14,7 @@ class Dashboard {
         this.updateDateTime();
         this.showTab(this.currentTab);
         this.setupFilters();
-        
+
         // Update time every minute
         setInterval(() => this.updateDateTime(), 60000);
     }
@@ -49,7 +49,7 @@ class Dashboard {
 
     setupEventListeners() {
         // Tab switching
-        document.querySelectorAll('.tab-button').forEach(button => {
+        document.querySelectorAll('.tab-button').forEach((button) => {
             button.addEventListener('click', (e) => {
                 const tabName = e.currentTarget.dataset.tab;
                 this.showTab(tabName);
@@ -109,7 +109,7 @@ class Dashboard {
 
     setupFilters() {
         // Setup filters for all tabs
-        ['users', 'appointments', 'invoices'].forEach(tab => {
+        ['users', 'appointments', 'invoices'].forEach((tab) => {
             this.setupTabFilters(tab);
         });
     }
@@ -169,7 +169,7 @@ class Dashboard {
         const rowsArray = Array.from(rows);
 
         // Filter rows
-        const filteredRows = rowsArray.filter(row => {
+        const filteredRows = rowsArray.filter((row) => {
             let show = true;
 
             // Search filter
@@ -197,7 +197,7 @@ class Dashboard {
         const sortedRows = this.sortRows(filteredRows, filters.sort, tab);
 
         // Hide all rows first
-        rowsArray.forEach(row => {
+        rowsArray.forEach((row) => {
             row.classList.add('hidden');
         });
 
@@ -212,8 +212,96 @@ class Dashboard {
         // Update count
         this.updateResultsCount(tab, visibleCount);
 
+        // Update summary stats for visible items
+        this.updateVisibleSummary(tab, sortedRows);
+
+        // Toggle mark all as paid button visibility
+        if (tab === 'invoices') {
+            this.toggleMarkAllPaidButton(sortedRows);
+        }
+
         // Show/hide no results message
         this.toggleNoResultsMessage(tab, visibleCount === 0);
+    }
+
+    toggleMarkAllPaidButton(visibleRows) {
+        const markPaidBtn = document.getElementById('mark-all-paid-btn');
+        if (!markPaidBtn) return;
+
+        const hasUnpaidInvoices = visibleRows.some((row) => row.dataset.paid === 'unpaid');
+
+        if (hasUnpaidInvoices) {
+            markPaidBtn.style.display = 'inline-flex';
+        } else {
+            markPaidBtn.style.display = 'none';
+        }
+    }
+
+    updateVisibleSummary(tab, visibleRows) {
+        let summaryHtml = '';
+
+        if (tab === 'invoices') {
+            let totalPaid = 0;
+            let totalUnpaid = 0;
+            let paidCount = 0;
+            let unpaidCount = 0;
+
+            visibleRows.forEach((row) => {
+                const total = parseFloat(row.dataset.total) || 0;
+                const isPaid = row.dataset.paid === 'paid';
+
+                if (isPaid) {
+                    totalPaid += total;
+                    paidCount++;
+                } else {
+                    totalUnpaid += total;
+                    unpaidCount++;
+                }
+            });
+
+            summaryHtml = `
+            <div class="visible-summary">
+                <span class="summary-item paid">Paid: $${totalPaid.toFixed(2)} (${paidCount})</span>
+                <span class="summary-item unpaid">Unpaid: $${totalUnpaid.toFixed(
+                    2
+                )} (${unpaidCount})</span>
+                <span class="summary-item total">Total: $${(totalPaid + totalUnpaid).toFixed(
+                    2
+                )}</span>
+            </div>
+        `;
+        } else if (tab === 'appointments') {
+            let scheduled = 0;
+            let completed = 0;
+            let cancelled = 0;
+
+            visibleRows.forEach((row) => {
+                const status = row.dataset.status;
+                if (status === 'scheduled') scheduled++;
+                else if (status === 'completed') completed++;
+                else if (status === 'cancelled') cancelled++;
+            });
+
+            summaryHtml = `
+            <div class="visible-summary">
+                <span class="summary-item scheduled">Scheduled: ${scheduled}</span>
+                <span class="summary-item completed">Completed: ${completed}</span>
+                <span class="summary-item cancelled">Cancelled: ${cancelled}</span>
+            </div>
+        `;
+        }
+
+        // Insert or update summary
+        const filterActions = document.querySelector(`#${tab} .filter-actions`);
+        let existingSummary = document.querySelector(`#${tab} .visible-summary`);
+
+        if (existingSummary) {
+            existingSummary.remove();
+        }
+
+        if (summaryHtml && filterActions) {
+            filterActions.insertAdjacentHTML('beforebegin', summaryHtml);
+        }
     }
 
     getSearchableText(row, tab) {
@@ -229,9 +317,38 @@ class Dashboard {
         }
     }
 
+    async markAllVisibleAsPaid(tab) {
+        if (tab !== 'invoices') return;
+
+        const visibleRows = Array.from(document.querySelectorAll(`#${tab} tbody tr`)).filter(
+            (row) => !row.classList.contains('hidden')
+        );
+
+        const unpaidInvoices = visibleRows.filter((row) => row.dataset.paid === 'unpaid');
+
+        if (unpaidInvoices.length === 0) {
+            alert('No unpaid invoices to mark as paid');
+            return;
+        }
+
+        if (!confirm(`Mark ${unpaidInvoices.length} invoice(s) as paid?`)) return;
+
+        try {
+            const updatePromises = unpaidInvoices.map((row) => {
+                const id = row.dataset.id;
+                return this.makeRequest(`/index/invoices/${id}/mark-paid`, 'PUT');
+            });
+
+            await Promise.all(updatePromises);
+            this.showNotification('success', `${unpaidInvoices.length} invoice(s) marked as paid`);
+        } catch (error) {
+            this.showNotification('error', 'Failed to mark invoices as paid');
+        }
+    }
+
     sortRows(rows, sortOption, tab) {
         const [field, direction] = sortOption.split('-');
-        
+
         return rows.sort((a, b) => {
             let aValue, bValue;
 
@@ -313,7 +430,7 @@ class Dashboard {
 
     toggleNoResultsMessage(tab, show) {
         let noResultsDiv = document.querySelector(`#${tab} .no-results`);
-        
+
         if (show && !noResultsDiv) {
             // Create no results message
             noResultsDiv = document.createElement('div');
@@ -322,7 +439,7 @@ class Dashboard {
                 <div class="no-results-icon">🔍</div>
                 <div>No results found matching your filters</div>
             `;
-            
+
             const tableContainer = document.querySelector(`#${tab} .table-container`);
             tableContainer.appendChild(noResultsDiv);
         } else if (!show && noResultsDiv) {
@@ -334,8 +451,12 @@ class Dashboard {
         // Reset filter values
         this.filters[tab] = {
             search: '',
-            sort: tab === 'users' ? 'fullName-asc' : 
-                  tab === 'appointments' ? 'appointmentDate-desc' : 'dueDate-desc'
+            sort:
+                tab === 'users'
+                    ? 'fullName-asc'
+                    : tab === 'appointments'
+                    ? 'appointmentDate-desc'
+                    : 'dueDate-desc',
         };
 
         if (tab !== 'users') {
@@ -368,26 +489,47 @@ class Dashboard {
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         };
-        document.getElementById('current-time').textContent = now.toLocaleDateString('en-US', options);
+        document.getElementById('current-time').textContent = now.toLocaleDateString(
+            'en-US',
+            options
+        );
     }
 
     showTab(tabName) {
         // Update tab buttons
-        document.querySelectorAll('.tab-button').forEach(button => {
+        document.querySelectorAll('.tab-button').forEach((button) => {
             button.classList.remove('active');
         });
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
         // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
+        document.querySelectorAll('.tab-content').forEach((content) => {
             content.classList.remove('active');
         });
         document.getElementById(tabName).classList.add('active');
 
         this.currentTab = tabName;
-        this.storeCurrentTab(tabName); // Store the current tab
+        this.storeCurrentTab(tabName);
+
+        // Add mark all as paid button for invoices
+        if (tabName === 'invoices') {
+            const sectionHeader = document.querySelector('#invoices .section-header');
+            let markPaidBtn = document.getElementById('mark-all-paid-btn');
+
+            if (!markPaidBtn) {
+                markPaidBtn = document.createElement('button');
+                markPaidBtn.id = 'mark-all-paid-btn';
+                markPaidBtn.className = 'btn btn-primary';
+                markPaidBtn.style.display = 'none';
+                markPaidBtn.innerHTML = 'Mark All as Paid';
+                markPaidBtn.onclick = () => this.markAllVisibleAsPaid('invoices');
+
+                const createBtn = sectionHeader.querySelector('[data-action="create"]');
+                createBtn.parentNode.insertBefore(markPaidBtn, createBtn);
+            }
+        }
 
         // Apply filters for the current tab
         this.applyFilters(tabName);
@@ -621,7 +763,7 @@ class Dashboard {
                         </div>
                     </form>
                 </div>
-            `
+            `,
         };
 
         return forms[type] || '';
@@ -632,10 +774,10 @@ class Dashboard {
         if (!row) return;
 
         row.classList.add('editing');
-        
+
         // Store original values for cancel functionality
         const originalValues = {};
-        row.querySelectorAll('.edit-mode input, .edit-mode select').forEach(input => {
+        row.querySelectorAll('.edit-mode input, .edit-mode select').forEach((input) => {
             originalValues[input.name] = input.value;
         });
         row._originalValues = originalValues;
@@ -649,8 +791,10 @@ class Dashboard {
 
         // Restore original values
         if (row._originalValues) {
-            Object.keys(row._originalValues).forEach(name => {
-                const input = row.querySelector(`.edit-mode input[name="${name}"], .edit-mode select[name="${name}"]`);
+            Object.keys(row._originalValues).forEach((name) => {
+                const input = row.querySelector(
+                    `.edit-mode input[name="${name}"], .edit-mode select[name="${name}"]`
+                );
                 if (input) {
                     input.value = row._originalValues[name];
                 }
@@ -671,7 +815,7 @@ class Dashboard {
         try {
             const data = this.collectEditData(type, row);
             const response = await this.makeRequest(`/index/${type}s/${id}`, 'PUT', data);
-            
+
             if (response.ok) {
                 const result = await response.json();
                 this.showNotification('success', result.message);
@@ -693,7 +837,7 @@ class Dashboard {
 
     collectEditData(type, row) {
         const data = {};
-        
+
         switch (type) {
             case 'user':
                 data.fullName = row.querySelector('input[name="fullName"]').value;
@@ -716,7 +860,7 @@ class Dashboard {
                 data.isPaid = row.querySelector('select[name="isPaid"]').value === 'true';
                 break;
         }
-        
+
         return data;
     }
 
@@ -730,7 +874,7 @@ class Dashboard {
         try {
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
-            
+
             // Convert boolean and number fields
             if (type === 'invoice') {
                 data.hours = parseFloat(data.hours);
@@ -739,7 +883,7 @@ class Dashboard {
             }
 
             const response = await this.makeRequest(`/index/${type}s`, 'POST', data);
-            
+
             if (response.ok) {
                 const result = await response.json();
                 this.showNotification('success', result.message);
@@ -763,7 +907,7 @@ class Dashboard {
 
         try {
             const response = await this.makeRequest(`/index/${type}s/${id}`, 'DELETE');
-            
+
             if (response.ok) {
                 const result = await response.json();
                 this.showNotification('success', result.message);
@@ -780,8 +924,8 @@ class Dashboard {
         const options = {
             method,
             headers: {
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+            },
         };
 
         if (data) {
