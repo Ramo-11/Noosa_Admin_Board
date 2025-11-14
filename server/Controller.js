@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const Invoice = require('../models/Invoice');
+const { sendInvoiceEmail, sendAppointmentEmail } = require('./mail');
 const { generalLogger } = require('./utils/generalLogger');
 const bcrypt = require('bcrypt');
 
@@ -233,12 +234,26 @@ const createAppointment = async (req, res) => {
         }
 
         const newAppointment = new Appointment({
-            customer: customer._id,
+        customer: customer._id,
+        courseName,
+        appointmentDate,
+        appointmentTime,
+        status,
+    });
+
+    try {
+        await sendAppointmentEmail(customer.email, {
+            status,
+            customerName: customer.fullName,
             courseName,
             appointmentDate,
             appointmentTime,
-            status,
         });
+        generalLogger.info(`Appointment email sent successfully to ${customer.email}`);
+    } catch (emailError) {
+        generalLogger.error(`Failed to send appointment email: ${emailError}`);
+    }
+
 
         await newAppointment.save();
 
@@ -292,6 +307,19 @@ const createInvoice = async (req, res) => {
             isPaid,
         });
         await newInvoice.save();
+        // Send email
+        try {
+            await sendInvoiceEmail(customer.email, {
+                customerName: customer.fullName,
+                invoiceNumber,
+                sessionDate,
+                dueDate,
+                total: hours * price,
+            });
+            generalLogger.info(`Invoice email sent successfully to ${customer.email}`);
+        } catch (emailError) {
+            generalLogger.error(`Failed to send invoice email: ${emailError}`);
+        }
 
         generalLogger.info(`Invoice created successfully`);
         return res.status(201).send({ message: 'Invoice created successfully' });
