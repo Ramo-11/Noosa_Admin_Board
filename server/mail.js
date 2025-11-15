@@ -1,10 +1,14 @@
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 const mailTransporter = nodemailer.createTransport({
-    service: "gmail",
+    service: 'gmail',
     auth: {
-        user: "noosa@noosaengage.com",
+        user: 'noosa@noosaengage.com',
         pass: process.env.EMAIL_PASSWORD,
+    },
+    tls: {
+        rejectUnauthorized: false,
     },
 });
 
@@ -149,52 +153,49 @@ async function sendInvoiceEmail(to, invoiceDetails) {
 }
 
 async function sendAppointmentEmail(to, appointmentDetails) {
-    const { 
-        status, 
-        customerName, 
-        courseName, 
-        appointmentDate, 
-        appointmentTime, 
-    } = appointmentDetails;
+    const { status, customerName, courseName, appointmentDate, appointmentTime } =
+        appointmentDetails;
 
     // Define dynamic values based on status
-    let subject = "";
-    let header = "";
-    let introText = "";
-    let highlightTitle = "";
-    let extraNote = "";
-    console.log("Status" + status);
+    let subject = '';
+    let header = '';
+    let introText = '';
+    let highlightTitle = '';
+    let extraNote = '';
+    console.log('Status' + status);
     switch (status) {
-        case "scheduled":
+        case 'scheduled':
             subject = `Appointment Confirmation for ${courseName}`;
-            header = "Appointment Confirmed";
+            header = 'Appointment Confirmed';
             introText = `Dear ${customerName},<br><br>Your appointment has been successfully scheduled.`;
-            highlightTitle = "Appointment Details";
-            extraNote = "We look forward to your session. If you need to reschedule, please contact us in advance.";
+            highlightTitle = 'Appointment Details';
+            extraNote =
+                'We look forward to your session. If you need to reschedule, please contact us in advance.';
             break;
 
-        case "completed":
+        case 'completed':
             subject = `Appointment Completed - ${courseName}`;
-            header = "Appointment Completed";
+            header = 'Appointment Completed';
             introText = `Dear ${customerName},<br><br>Your appointment for <strong>${courseName}</strong> has been completed successfully.`;
-            highlightTitle = "Completed Appointment Details";
-            extraNote = "Thank you for attending! We appreciate your participation.";
+            highlightTitle = 'Completed Appointment Details';
+            extraNote = 'Thank you for attending! We appreciate your participation.';
             break;
 
-        case "canceled":
+        case 'canceled':
             subject = `Appointment Canceled - ${courseName}`;
-            header = "Appointment Canceled";
+            header = 'Appointment Canceled';
             introText = `Dear ${customerName},<br><br>We regret to inform you that your appointment for <strong>${courseName}</strong> has been canceled.`;
-            highlightTitle = "Canceled Appointment Details";
-            extraNote = "If this was unintentional or you’d like to rebook, please contact our support team.";
+            highlightTitle = 'Canceled Appointment Details';
+            extraNote =
+                'If this was unintentional or you’d like to rebook, please contact our support team.';
             break;
 
         default:
             subject = `Appointment Update - ${courseName}`;
-            header = "Appointment Update";
+            header = 'Appointment Update';
             introText = `Dear ${customerName},<br><br>Here’s an update regarding your appointment.`;
-            highlightTitle = "Appointment Details";
-            extraNote = "";
+            highlightTitle = 'Appointment Details';
+            extraNote = '';
             break;
     }
 
@@ -319,5 +320,4 @@ async function sendAppointmentEmail(to, appointmentDetails) {
     await mailTransporter.sendMail(mailOptions);
 }
 
-
-module.exports = { sendInvoiceEmail , sendAppointmentEmail};
+module.exports = { sendInvoiceEmail, sendAppointmentEmail };
