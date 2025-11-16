@@ -18,6 +18,7 @@ const tutorsData = [
         fullName: 'Mostafa Abdulaleem',
         email: 'mostafahesham346@yahoo.com',
         phoneNumber: '',
+        sharePercentage: 50, // 50% to tutor, 50% to business
         isActive: true,
         totalEarnings: 0,
     },
@@ -25,6 +26,7 @@ const tutorsData = [
         fullName: 'Omar Abdelalim',
         email: 'omarh5877@gmail.com',
         phoneNumber: '',
+        sharePercentage: 50, // 50% to tutor, 50% to business
         isActive: true,
         totalEarnings: 0,
     },
@@ -32,6 +34,7 @@ const tutorsData = [
         fullName: 'Hanan Mahmoud',
         email: 'hanan@noosaengage.com',
         phoneNumber: '',
+        sharePercentage: 100, // 100% to tutor, 0% to business
         isActive: true,
         totalEarnings: 0,
     },
@@ -64,10 +67,20 @@ async function migrateTutors() {
                 console.log(
                     `   ⚠️  Tutor already exists: ${tutorData.fullName} (${tutorData.email})`
                 );
+                // Update share percentage if it has changed
+                if (tutor.sharePercentage !== tutorData.sharePercentage) {
+                    tutor.sharePercentage = tutorData.sharePercentage;
+                    await tutor.save();
+                    console.log(
+                        `      ✅ Updated share percentage to ${tutorData.sharePercentage}%`
+                    );
+                }
             } else {
                 tutor = new Tutor(tutorData);
                 await tutor.save();
-                console.log(`   ✅ Created tutor: ${tutorData.fullName} (${tutorData.email})`);
+                console.log(
+                    `   ✅ Created tutor: ${tutorData.fullName} (${tutorData.email}) - ${tutorData.sharePercentage}% share`
+                );
             }
 
             createdTutors[tutorData.email] = tutor;

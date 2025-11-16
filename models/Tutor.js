@@ -18,6 +18,13 @@ const tutorSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        sharePercentage: {
+            type: Number,
+            default: 50,
+            min: 0,
+            max: 100,
+            required: true,
+        },
         isActive: {
             type: Boolean,
             default: true,

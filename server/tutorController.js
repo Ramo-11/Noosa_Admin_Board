@@ -48,7 +48,7 @@ const getTutors = async (req, res) => {
 
 const updateTutor = async (req, res) => {
     try {
-        const allowedUpdates = ['fullName', 'email', 'phoneNumber', 'isActive'];
+        const allowedUpdates = ['fullName', 'email', 'phoneNumber', 'isActive', 'sharePercentage'];
         const updates = Object.keys(req.body);
         const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
@@ -63,6 +63,16 @@ const updateTutor = async (req, res) => {
             });
             if (existingTutor) {
                 return res.status(400).json({ message: 'Email already in use' });
+            }
+        }
+
+        // Validate share percentage
+        if (req.body.sharePercentage !== undefined) {
+            const percentage = parseFloat(req.body.sharePercentage);
+            if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+                return res
+                    .status(400)
+                    .json({ message: 'Share percentage must be between 0 and 100' });
             }
         }
 

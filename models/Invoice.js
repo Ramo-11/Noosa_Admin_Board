@@ -69,17 +69,27 @@ invoiceSchema.pre('save', function (next) {
 // Define the milestone date (when business reached $2500)
 const MILESTONE_DATE = new Date('2024-12-05');
 
-invoiceSchema.pre('save', function (next) {
+invoiceSchema.pre('save', async function (next) {
     this.total = this.hours * this.price;
 
-    // Determine if this invoice applies the 50/50 split rule
+    // Determine if this invoice applies the split rule
     const invoiceDate = new Date(this.sessionDate);
     this.appliesSplitRule = invoiceDate >= MILESTONE_DATE;
 
-    if (this.appliesSplitRule && this.isPaid) {
-        // After milestone: 50% to tutor, 50% to business
-        this.tutorShare = this.total * 0.5;
-        this.businessShare = this.total * 0.5;
+    if (this.appliesSplitRule && this.isPaid && this.tutor) {
+        // After milestone: use tutor's custom share percentage
+        const Tutor = this.constructor.db.model('Tutor');
+        const tutor = await Tutor.findById(this.tutor);
+
+        if (tutor) {
+            const tutorSharePercent = tutor.sharePercentage / 100;
+            this.tutorShare = this.total * tutorSharePercent;
+            this.businessShare = this.total * (1 - tutorSharePercent);
+        } else {
+            // Fallback to 50/50 if tutor not found
+            this.tutorShare = this.total * 0.5;
+            this.businessShare = this.total * 0.5;
+        }
     } else if (!this.appliesSplitRule && this.isPaid) {
         // Before milestone: 100% to business
         this.tutorShare = 0;

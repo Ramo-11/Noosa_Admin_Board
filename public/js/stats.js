@@ -34,6 +34,7 @@ class StatsManager {
             totalRevenue: 0,
             totalUnpaidAmount: 0,
             userCount: 0,
+            tutorCount: 0,
             appointmentCount: 0,
             unpaidInvoiceCount: 0,
             paidInvoiceCount: 0,
@@ -41,6 +42,12 @@ class StatsManager {
             completedAppointments: 0,
             cancelledAppointments: 0,
             courseCategories: {},
+            totalBusinessShare: 0,
+            totalTutorShare: 0,
+            sessionsBeforeSplit: 0,
+            sessionsAfterSplit: 0,
+            revenueBeforeSplit: 0,
+            revenueAfterSplit: 0,
         };
 
         const today = new Date();
@@ -90,6 +97,7 @@ class StatsManager {
         const invoiceRows = document.querySelectorAll('#invoices tbody tr');
 
         invoiceRows.forEach((row) => {
+            console.log(row.dataset);
             const total = parseFloat(row.dataset.total) || 0;
             const isPaid = row.dataset.paid === 'paid';
             const appliesSplit = row.dataset.appliesSplit === 'true';

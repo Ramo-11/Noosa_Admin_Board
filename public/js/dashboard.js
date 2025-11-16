@@ -738,6 +738,11 @@ class Dashboard {
                             <label for="phoneNumber">Phone Number</label>
                             <input type="text" id="phoneNumber" name="phoneNumber">
                         </div>
+                        <div class="form-group">
+                        <label for="sharePercentage">Share Percentage *</label>
+                            <input type="number" id="sharePercentage" name="sharePercentage" value="50" min="0" max="100" step="1" required>
+                            <small class="form-hint">Percentage of revenue that goes to the tutor after milestone (0-100%)</small>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
@@ -945,6 +950,9 @@ class Dashboard {
                 data.fullName = row.querySelector('input[name="fullName"]').value;
                 data.email = row.querySelector('input[name="email"]').value;
                 data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value;
+                data.sharePercentage = parseFloat(
+                    row.querySelector('input[name="sharePercentage"]').value
+                );
                 data.isActive = row.querySelector('select[name="isActive"]').value === 'true';
                 break;
             case 'appointment':
@@ -990,6 +998,11 @@ class Dashboard {
                 data.hours = parseFloat(data.hours);
                 data.price = parseFloat(data.price);
                 data.isPaid = data.isPaid === 'true';
+            }
+
+            // Add this section for tutor
+            if (type === 'tutor') {
+                data.sharePercentage = parseFloat(data.sharePercentage);
             }
 
             const response = await this.makeRequest(`/index/${type}s`, 'POST', data);

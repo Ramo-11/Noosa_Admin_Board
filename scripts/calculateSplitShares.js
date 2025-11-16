@@ -52,20 +52,24 @@ async function calculateSplitShares() {
             const invoiceDate = new Date(invoice.sessionDate);
             const appliesSplitRule = invoiceDate >= MILESTONE_DATE;
 
+            // Get tutor details including share percentage
+            const tutorDetails = await Tutor.findById(invoice.tutor._id);
+            const tutorSharePercent = tutorDetails ? tutorDetails.sharePercentage / 100 : 0.5;
+
             // Update invoice fields
             invoice.appliesSplitRule = appliesSplitRule;
 
             if (appliesSplitRule && invoice.isPaid) {
-                invoice.tutorShare = invoice.total * 0.5;
-                invoice.businessShare = invoice.total * 0.5;
+                invoice.tutorShare = invoice.total * tutorSharePercent;
+                invoice.businessShare = invoice.total * (1 - tutorSharePercent);
                 afterCount++;
                 totalAfterSplit += invoice.total;
                 console.log(
                     `   ✅ [AFTER] ${invoice.invoiceNumber} - ${
                         invoice.sessionDate
-                    } - $${invoice.total.toFixed(2)} - ${
-                        invoice.tutor.fullName
-                    } (Tutor: $${invoice.tutorShare.toFixed(
+                    } - $${invoice.total.toFixed(2)} - ${invoice.tutor.fullName} (${(
+                        tutorSharePercent * 100
+                    ).toFixed(0)}%) (Tutor: $${invoice.tutorShare.toFixed(
                         2
                     )}, Business: $${invoice.businessShare.toFixed(2)})`
                 );

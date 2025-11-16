@@ -498,9 +498,11 @@
                             <th>Full Name</th>
                             <th>Email</th>
                             <th class="hide-mobile">Phone Number</th>
+                            <th class="hide-mobile">Share %</th>
                             <th class="hide-mobile">Before Split</th>
-                            <th class="hide-mobile">After Split (50%)</th>
+                            <th class="hide-mobile">After Split</th>
                             <th>Total Earnings</th>
+                            <th class="hide-mobile">Total Generated</th>
                             <th>Active</th>
                             <th>Actions</th>
                         </tr>
@@ -525,6 +527,14 @@
                                     <span class="view-mode"><%= tutor.phoneNumber || 'N/A' %></span>
                                     <input type="text" class="edit-mode" name="phoneNumber" value="<%= tutor.phoneNumber || '' %>">
                                 </td>
+                                <td data-label="Share %" class="hide-mobile">
+                                    <span class="view-mode">
+                                        <span class="status-badge status-paid">
+                                            <%= tutor.sharePercentage %>%
+                                        </span>
+                                    </span>
+                                    <input type="number" class="edit-mode" name="sharePercentage" value="<%= tutor.sharePercentage %>" min="0" max="100" step="1">
+                                </td>
                                 <td data-label="Before Split" class="hide-mobile">
                                     <span class="view-mode">
                                         $<%= tutor.totalEarningsBeforeSplit.toFixed(2) %>
@@ -543,6 +553,11 @@
                                 </td>
                                 <td data-label="Total Earnings">
                                     <span class="view-mode total-amount">$<%= tutor.totalEarnings.toFixed(2) %></span>
+                                </td>
+                                <td data-label="Total Generated" class="hide-mobile">
+                                    <span class="view-mode" style="font-weight: 600; color: #3b82f6;">
+                                        $<%= (tutor.totalEarningsBeforeSplit + tutor.totalEarningsAfterSplit + tutor.totalBusinessShare).toFixed(2) %>
+                                    </span>
                                 </td>
                                 <td data-label="Active">
                                     <span class="view-mode">
