@@ -26,6 +26,26 @@ const tutorSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        totalEarningsBeforeSplit: {
+            type: Number,
+            default: 0,
+        },
+        totalEarningsAfterSplit: {
+            type: Number,
+            default: 0,
+        },
+        totalBusinessShare: {
+            type: Number,
+            default: 0,
+        },
+        sessionCountBeforeSplit: {
+            type: Number,
+            default: 0,
+        },
+        sessionCountAfterSplit: {
+            type: Number,
+            default: 0,
+        },
         createdAt: {
             type: Date,
             default: Date.now,

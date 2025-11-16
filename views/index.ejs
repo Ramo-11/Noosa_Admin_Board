@@ -373,6 +373,9 @@
                                 data-customer-name="<%= invoice.customer ? invoice.customer.fullName.toLowerCase() : 'user deleted' %>"
                                 data-tutor="<%= invoice.tutor ? invoice.tutor.email.toLowerCase() : '' %>"
                                 data-tutor-name="<%= invoice.tutor ? invoice.tutor.fullName.toLowerCase() : '' %>"
+                                data-applies-split="<%= invoice.appliesSplitRule %>"
+                                data-tutor-share="<%= invoice.tutorShare %>"
+                                data-business-share="<%= invoice.businessShare %>"
                                 data-session-date="<%= invoice.sessionDate %>"
                                 data-due-date="<%= invoice.dueDate %>"
                                 data-total="<%= invoice.total %>"
@@ -495,7 +498,9 @@
                             <th>Full Name</th>
                             <th>Email</th>
                             <th class="hide-mobile">Phone Number</th>
-                            <th class="hide-mobile">Total Earnings</th>
+                            <th class="hide-mobile">Before Split</th>
+                            <th class="hide-mobile">After Split (50%)</th>
+                            <th>Total Earnings</th>
                             <th>Active</th>
                             <th>Actions</th>
                         </tr>
@@ -520,7 +525,23 @@
                                     <span class="view-mode"><%= tutor.phoneNumber || 'N/A' %></span>
                                     <input type="text" class="edit-mode" name="phoneNumber" value="<%= tutor.phoneNumber || '' %>">
                                 </td>
-                                <td data-label="Total Earnings" class="hide-mobile">
+                                <td data-label="Before Split" class="hide-mobile">
+                                    <span class="view-mode">
+                                        $<%= tutor.totalEarningsBeforeSplit.toFixed(2) %>
+                                        <small style="display: block; color: #64748b; font-size: 0.75rem;">
+                                            <%= tutor.sessionCountBeforeSplit %> sessions
+                                        </small>
+                                    </span>
+                                </td>
+                                <td data-label="After Split" class="hide-mobile">
+                                    <span class="view-mode total-amount">
+                                        $<%= tutor.totalEarningsAfterSplit.toFixed(2) %>
+                                        <small style="display: block; color: #64748b; font-size: 0.75rem;">
+                                            <%= tutor.sessionCountAfterSplit %> sessions | Business: $<%= tutor.totalBusinessShare.toFixed(2) %>
+                                        </small>
+                                    </span>
+                                </td>
+                                <td data-label="Total Earnings">
                                     <span class="view-mode total-amount">$<%= tutor.totalEarnings.toFixed(2) %></span>
                                 </td>
                                 <td data-label="Active">

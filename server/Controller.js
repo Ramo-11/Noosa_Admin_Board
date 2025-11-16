@@ -153,10 +153,15 @@ const updateInvoice = async (req, res) => {
     }
 
     try {
-        const oldInvoice = await Invoice.findById(req.params.id);
+        const oldInvoice = await Invoice.findById(req.params.id).populate('tutor');
         if (!oldInvoice) {
             return res.status(404).send({ message: 'Invoice not found' });
         }
+
+        // Store old values for tutor earnings adjustment
+        const oldTutorShare = oldInvoice.tutorShare || 0;
+        const oldBusinessShare = oldInvoice.businessShare || 0;
+        const wasApplyingSplit = oldInvoice.appliesSplitRule;
 
         const updateData = {
             invoiceNumber: invoiceNumber,
@@ -172,26 +177,55 @@ const updateInvoice = async (req, res) => {
             updateData.tutor = tutorId;
         }
 
+        // Calculate split shares
+        const MILESTONE_DATE = new Date('2024-12-05');
+        const invoiceDate = new Date(sessionDate);
+        const appliesSplitRule = invoiceDate >= MILESTONE_DATE;
+
+        updateData.appliesSplitRule = appliesSplitRule;
+
+        if (appliesSplitRule && isPaid) {
+            updateData.tutorShare = updateData.total * 0.5;
+            updateData.businessShare = updateData.total * 0.5;
+        } else if (!appliesSplitRule && isPaid) {
+            updateData.tutorShare = 0;
+            updateData.businessShare = updateData.total;
+        } else {
+            updateData.tutorShare = 0;
+            updateData.businessShare = 0;
+        }
+
         const updatedInvoice = await Invoice.findByIdAndUpdate(req.params.id, updateData, {
             new: true,
         }).populate('tutor');
 
-        // Handle tutor earnings if payment status changed
-        if (updatedInvoice.tutor) {
+        // Handle tutor earnings adjustment
+        if (oldInvoice.tutor) {
             const Tutor = require('../models/Tutor');
-            const tutor = await Tutor.findById(updatedInvoice.tutor._id);
+            const tutor = await Tutor.findById(oldInvoice.tutor._id);
 
-            if (oldInvoice.isPaid && !isPaid) {
-                // Was paid, now unpaid - subtract
-                tutor.totalEarnings -= oldInvoice.total;
-                await tutor.save();
-            } else if (!oldInvoice.isPaid && isPaid) {
-                // Was unpaid, now paid - add
-                tutor.totalEarnings += updatedInvoice.total;
-                await tutor.save();
-            } else if (oldInvoice.isPaid && isPaid && oldInvoice.total !== updatedInvoice.total) {
-                // Still paid but amount changed
-                tutor.totalEarnings = tutor.totalEarnings - oldInvoice.total + updatedInvoice.total;
+            if (tutor) {
+                // Subtract old earnings
+                if (wasApplyingSplit && oldInvoice.isPaid) {
+                    tutor.totalEarningsAfterSplit -= oldTutorShare;
+                    tutor.totalBusinessShare -= oldBusinessShare;
+                    tutor.sessionCountAfterSplit = Math.max(0, tutor.sessionCountAfterSplit - 1);
+                } else if (!wasApplyingSplit && oldInvoice.isPaid) {
+                    tutor.totalEarningsBeforeSplit -= oldInvoice.total;
+                    tutor.sessionCountBeforeSplit = Math.max(0, tutor.sessionCountBeforeSplit - 1);
+                }
+
+                // Add new earnings
+                if (appliesSplitRule && isPaid) {
+                    tutor.totalEarningsAfterSplit += updateData.tutorShare;
+                    tutor.totalBusinessShare += updateData.businessShare;
+                    tutor.sessionCountAfterSplit += 1;
+                } else if (!appliesSplitRule && isPaid) {
+                    tutor.totalEarningsBeforeSplit += updateData.total;
+                    tutor.sessionCountBeforeSplit += 1;
+                }
+
+                tutor.totalEarnings = tutor.totalEarningsAfterSplit;
                 await tutor.save();
             }
         }
@@ -216,12 +250,28 @@ const markInvoiceAsPaid = async (req, res) => {
             const Tutor = require('../models/Tutor');
             const tutor = await Tutor.findById(invoice.tutor._id);
             if (tutor) {
-                tutor.totalEarnings += invoice.total;
+                if (invoice.appliesSplitRule) {
+                    tutor.totalEarningsAfterSplit += invoice.tutorShare;
+                    tutor.totalBusinessShare += invoice.businessShare;
+                    tutor.sessionCountAfterSplit += 1;
+                    tutor.totalEarnings += invoice.tutorShare;
+                } else {
+                    tutor.totalEarningsBeforeSplit += invoice.total;
+                    tutor.sessionCountBeforeSplit += 1;
+                }
                 await tutor.save();
             }
         }
 
         invoice.isPaid = true;
+        // Recalculate shares when marking as paid
+        if (invoice.appliesSplitRule) {
+            invoice.tutorShare = invoice.total * 0.5;
+            invoice.businessShare = invoice.total * 0.5;
+        } else {
+            invoice.tutorShare = 0;
+            invoice.businessShare = invoice.total;
+        }
         await invoice.save();
 
         generalLogger.info(`Invoice ${invoice.invoiceNumber} marked as paid`);
@@ -364,6 +414,23 @@ const createInvoice = async (req, res) => {
             return res.status(400).send({ message: 'Tutor not found' });
         }
 
+        // Calculate split shares
+        const MILESTONE_DATE = new Date('2024-12-05');
+        const invoiceDate = new Date(sessionDate);
+        const total = hours * price;
+        const appliesSplitRule = invoiceDate >= MILESTONE_DATE;
+
+        let tutorShare = 0;
+        let businessShare = 0;
+
+        if (appliesSplitRule && isPaid) {
+            tutorShare = total * 0.5;
+            businessShare = total * 0.5;
+        } else if (!appliesSplitRule && isPaid) {
+            tutorShare = 0;
+            businessShare = total;
+        }
+
         const newInvoice = new Invoice({
             invoiceNumber,
             customer: customer._id,
@@ -372,14 +439,25 @@ const createInvoice = async (req, res) => {
             dueDate,
             hours,
             price,
-            total: hours * price,
+            total,
             isPaid,
+            appliesSplitRule,
+            tutorShare,
+            businessShare,
         });
         await newInvoice.save();
 
-        // Update tutor earnings if invoice is paid
+        // Update tutor earnings
         if (isPaid) {
-            tutor.totalEarnings += hours * price;
+            if (appliesSplitRule) {
+                tutor.totalEarningsAfterSplit += tutorShare;
+                tutor.totalBusinessShare += businessShare;
+                tutor.sessionCountAfterSplit += 1;
+                tutor.totalEarnings += tutorShare;
+            } else {
+                tutor.totalEarningsBeforeSplit += total;
+                tutor.sessionCountBeforeSplit += 1;
+            }
             await tutor.save();
         }
 
@@ -391,7 +469,7 @@ const createInvoice = async (req, res) => {
                 invoiceNumber,
                 sessionDate,
                 dueDate,
-                total: hours * price,
+                total: total,
             });
             generalLogger.info(`Invoice email sent successfully to ${customer.email}`);
         } catch (emailError) {

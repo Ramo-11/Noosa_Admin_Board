@@ -45,12 +45,51 @@ const invoiceSchema = new mongoose.Schema(
             required: true,
             default: false,
         },
+        tutorShare: {
+            type: Number,
+            default: 0,
+        },
+        businessShare: {
+            type: Number,
+            default: 0,
+        },
+        appliesSplitRule: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true }
 );
 
 invoiceSchema.pre('save', function (next) {
     this.total = this.hours * this.price;
+    next();
+});
+
+// Define the milestone date (when business reached $2500)
+const MILESTONE_DATE = new Date('2024-12-05');
+
+invoiceSchema.pre('save', function (next) {
+    this.total = this.hours * this.price;
+
+    // Determine if this invoice applies the 50/50 split rule
+    const invoiceDate = new Date(this.sessionDate);
+    this.appliesSplitRule = invoiceDate >= MILESTONE_DATE;
+
+    if (this.appliesSplitRule && this.isPaid) {
+        // After milestone: 50% to tutor, 50% to business
+        this.tutorShare = this.total * 0.5;
+        this.businessShare = this.total * 0.5;
+    } else if (!this.appliesSplitRule && this.isPaid) {
+        // Before milestone: 100% to business
+        this.tutorShare = 0;
+        this.businessShare = this.total;
+    } else {
+        // Not paid yet
+        this.tutorShare = 0;
+        this.businessShare = 0;
+    }
+
     next();
 });
 

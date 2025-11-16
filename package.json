@@ -5,7 +5,8 @@
     "scripts": {
         "dev": "cross-env NODE_ENV=development nodemon app.js",
         "start": "cross-env NODE_ENV=production node app.js",
-        "migrate-tutors": "node scripts/migrateTutors.js"
+        "migrate-tutors": "node scripts/migrateTutors.js",
+        "calculate-splits": "node scripts/calculateSplitShares.js"
     },
     "repository": {
         "type": "git",

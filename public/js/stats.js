@@ -13,6 +13,12 @@ class StatsManager {
             completedAppointments: 0,
             cancelledAppointments: 0,
             courseCategories: {},
+            totalBusinessShare: 0,
+            totalTutorShare: 0,
+            sessionsBeforeSplit: 0,
+            sessionsAfterSplit: 0,
+            revenueBeforeSplit: 0,
+            revenueAfterSplit: 0,
         };
         this.init();
     }
@@ -86,10 +92,25 @@ class StatsManager {
         invoiceRows.forEach((row) => {
             const total = parseFloat(row.dataset.total) || 0;
             const isPaid = row.dataset.paid === 'paid';
+            const appliesSplit = row.dataset.appliesSplit === 'true';
+            const tutorShare = parseFloat(row.dataset.tutorShare) || 0;
+            const businessShare = parseFloat(row.dataset.businessShare) || 0;
 
             if (isPaid) {
                 this.stats.totalRevenue += total;
                 this.stats.paidInvoiceCount++;
+
+                // Track split statistics
+                this.stats.totalBusinessShare += businessShare;
+                this.stats.totalTutorShare += tutorShare;
+
+                if (appliesSplit) {
+                    this.stats.sessionsAfterSplit++;
+                    this.stats.revenueAfterSplit += total;
+                } else {
+                    this.stats.sessionsBeforeSplit++;
+                    this.stats.revenueBeforeSplit += total;
+                }
             } else {
                 this.stats.totalUnpaidAmount += total;
                 this.stats.unpaidInvoiceCount++;
@@ -179,6 +200,39 @@ class StatsManager {
                                 this.stats.unpaidInvoiceCount
                             } unpaid</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Business Revenue Split -->
+                <div class="stat-card stat-revenue">
+                    <div class="stat-icon">💼</div>
+                    <div class="stat-content">
+                        <div class="stat-value">$${this.formatNumber(
+                            this.stats.totalBusinessShare
+                        )}</div>
+                        <div class="stat-label">Business Share</div>
+                        <div class="stat-breakdown">
+                            <span class="stat-item">Before: ${
+                                this.stats.sessionsBeforeSplit
+                            } sessions</span>
+                            <span class="stat-item">After: ${
+                                this.stats.sessionsAfterSplit
+                            } sessions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tutor Payouts -->
+                <div class="stat-card stat-courses">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <div class="stat-content">
+                        <div class="stat-value">$${this.formatNumber(
+                            this.stats.totalTutorShare
+                        )}</div>
+                        <div class="stat-label">Total Tutor Payouts</div>
+                        <div class="stat-sublabel">From ${
+                            this.stats.sessionsAfterSplit
+                        } sessions after split</div>
                     </div>
                 </div>
                 
