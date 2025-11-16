@@ -1,10 +1,17 @@
 class Dashboard {
     constructor() {
-        this.currentTab = this.getStoredTab() || 'users'; // Get stored tab or default to 'users'
+        this.currentTab = this.getStoredTab() || 'users';
         this.filters = {
             users: { search: '', sort: 'fullName-asc' },
-            appointments: { search: '', status: '', customer: '', sort: 'appointmentDate-desc' },
-            invoices: { search: '', status: '', customer: '', sort: 'dueDate-desc' },
+            tutors: { search: '', sort: 'fullName-asc' },
+            appointments: {
+                search: '',
+                status: '',
+                customer: '',
+                tutor: '',
+                sort: 'appointmentDate-desc',
+            },
+            invoices: { search: '', status: '', customer: '', tutor: '', sort: 'dueDate-desc' },
         };
         this.init();
     }
@@ -109,7 +116,7 @@ class Dashboard {
 
     setupFilters() {
         // Setup filters for all tabs
-        ['users', 'appointments', 'invoices'].forEach((tab) => {
+        ['users', 'tutors', 'appointments', 'invoices'].forEach((tab) => {
             this.setupTabFilters(tab);
         });
     }
@@ -129,6 +136,15 @@ class Dashboard {
         if (sortSelect) {
             sortSelect.addEventListener('change', (e) => {
                 this.filters[tab].sort = e.target.value;
+                this.applyFilters(tab);
+            });
+        }
+
+        // Tutor filter (for appointments and invoices)
+        const tutorFilter = document.getElementById(`${tab}-tutor-filter`);
+        if (tutorFilter) {
+            tutorFilter.addEventListener('change', (e) => {
+                this.filters[tab].tutor = e.target.value.toLowerCase();
                 this.applyFilters(tab);
             });
         }
@@ -188,6 +204,12 @@ class Dashboard {
             if (filters.customer && tab !== 'users') {
                 const rowCustomer = row.dataset.customer;
                 show = show && rowCustomer === filters.customer;
+            }
+
+            // Tutor filter
+            if (filters.tutor && tab !== 'users' && tab !== 'tutors') {
+                const rowTutor = row.dataset.tutor;
+                show = show && rowTutor === filters.tutor;
             }
 
             return show;
@@ -308,6 +330,8 @@ class Dashboard {
         switch (tab) {
             case 'users':
                 return `${row.dataset.name} ${row.dataset.email} ${row.dataset.phone}`;
+            case 'tutors':
+                return `${row.dataset.name} ${row.dataset.email} ${row.dataset.phone}`;
             case 'appointments':
                 return `${row.dataset.customerName} ${row.dataset.customer} ${row.dataset.course}`;
             case 'invoices':
@@ -364,6 +388,10 @@ class Dashboard {
                 case 'customer':
                     aValue = a.dataset.customerName || a.dataset.customer;
                     bValue = b.dataset.customerName || b.dataset.customer;
+                    break;
+                case 'tutor':
+                    aValue = a.dataset.tutorName || a.dataset.tutor;
+                    bValue = b.dataset.tutorName || b.dataset.tutor;
                     break;
                 case 'courseName':
                     aValue = a.dataset.course;
@@ -452,16 +480,17 @@ class Dashboard {
         this.filters[tab] = {
             search: '',
             sort:
-                tab === 'users'
+                tab === 'users' || tab === 'tutors'
                     ? 'fullName-asc'
                     : tab === 'appointments'
                     ? 'appointmentDate-desc'
                     : 'dueDate-desc',
         };
 
-        if (tab !== 'users') {
+        if (tab !== 'users' && tab !== 'tutors') {
             this.filters[tab].status = '';
             this.filters[tab].customer = '';
+            this.filters[tab].tutor = '';
         }
 
         // Reset form elements
@@ -476,6 +505,9 @@ class Dashboard {
 
         const customerFilter = document.getElementById(`${tab}-customer-filter`);
         if (customerFilter) customerFilter.value = '';
+
+        const tutorFilter = document.getElementById(`${tab}-tutor-filter`);
+        if (tutorFilter) tutorFilter.value = '';
 
         // Apply cleared filters
         this.applyFilters(tab);
@@ -555,11 +587,35 @@ class Dashboard {
             this.setupInvoiceForm();
         }
 
+        // Populate tutor dropdown for appointments and invoices
+        if (type === 'appointment' || type === 'invoice') {
+            const tutorSelect = document.getElementById('tutorId');
+            if (tutorSelect) {
+                this.populateTutorDropdown(tutorSelect);
+            }
+        }
+
         // Focus first input
         setTimeout(() => {
             const firstInput = modalContainer.querySelector('input:not([readonly]), select');
             if (firstInput) firstInput.focus();
         }, 100);
+    }
+
+    async populateTutorDropdown(selectElement) {
+        try {
+            const response = await fetch('/index/tutors');
+            const tutors = await response.json();
+
+            tutors.forEach((tutor) => {
+                const option = document.createElement('option');
+                option.value = tutor._id;
+                option.textContent = `${tutor.fullName} (${tutor.email})`;
+                selectElement.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading tutors:', error);
+        }
     }
 
     async setupInvoiceForm() {
@@ -635,135 +691,175 @@ class Dashboard {
     getCreateFormHtml(type) {
         const forms = {
             user: `
-                <div class="create-form-container">
-                    <form class="create-form" data-type="user">
-                        <div class="form-header">
-                            <h3>Create New User</h3>
-                            <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
+            <div class="create-form-container">
+                <form class="create-form" data-type="user">
+                    <div class="form-header">
+                        <h3>Create New User</h3>
+                        <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" required>
                         </div>
-                        <div class="form-body">
-                            <div class="form-group">
-                                <label for="fullName">Full Name *</label>
-                                <input type="text" id="fullName" name="fullName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email *</label>
-                                <input type="email" id="email" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="phoneNumber">Phone Number</label>
-                                <input type="text" id="phoneNumber" name="phoneNumber">
-                            </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
                         </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Create User</button>
+                        <div class="form-group">
+                            <label for="phoneNumber">Phone Number</label>
+                            <input type="text" id="phoneNumber" name="phoneNumber">
                         </div>
-                    </form>
-                </div>
-            `,
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                    </div>
+                </form>
+            </div>
+        `,
+            tutor: `
+            <div class="create-form-container">
+                <form class="create-form" data-type="tutor">
+                    <div class="form-header">
+                        <h3>Create New Tutor</h3>
+                        <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" name="fullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phoneNumber">Phone Number</label>
+                            <input type="text" id="phoneNumber" name="phoneNumber">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Tutor</button>
+                    </div>
+                </form>
+            </div>
+        `,
             appointment: `
-                <div class="create-form-container">
-                    <form class="create-form" data-type="appointment">
-                        <div class="form-header">
-                            <h3>Create New Appointment</h3>
-                            <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
+            <div class="create-form-container">
+                <form class="create-form" data-type="appointment">
+                    <div class="form-header">
+                        <h3>Create New Appointment</h3>
+                        <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label for="customerEmail">Customer Email *</label>
+                            <input type="email" id="customerEmail" name="customerEmail" required>
                         </div>
-                        <div class="form-body">
+                        <div class="form-group">
+                            <label for="tutorId">Tutor *</label>
+                            <select id="tutorId" name="tutorId" required>
+                                <option value="">Select a tutor...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseName">Course Name *</label>
+                            <input type="text" id="courseName" name="courseName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentDate">Date *</label>
+                            <input type="date" id="appointmentDate" name="appointmentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentTime">Time *</label>
+                            <input type="text" id="appointmentTime" name="appointmentTime" 
+                                   placeholder="12:00 PM" required 
+                                   pattern="^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$" 
+                                   title="Enter time in the format HH:MM AM/PM">
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status *</label>
+                            <select id="status" name="status" required>
+                                <option value="Scheduled">Scheduled</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Appointment</button>
+                    </div>
+                </form>
+            </div>
+        `,
+            invoice: `
+            <div class="create-form-container">
+                <form class="create-form" data-type="invoice">
+                    <div class="form-header">
+                        <h3>Create New Invoice</h3>
+                        <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="invoiceNumber">Invoice Number</label>
+                                <div class="invoice-number-container">
+                                    <input type="text" id="invoiceNumber" name="invoiceNumber" required>
+                                    <button type="button" class="btn btn-sm btn-secondary" id="regenerate-invoice-btn">
+                                        🔄 Generate New
+                                    </button>
+                                </div>
+                                <small class="form-hint">Auto-generated 5-digit unique number</small>
+                            </div>
                             <div class="form-group">
                                 <label for="customerEmail">Customer Email *</label>
                                 <input type="email" id="customerEmail" name="customerEmail" required>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tutorId">Tutor *</label>
+                            <select id="tutorId" name="tutorId" required>
+                                <option value="">Select a tutor...</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
-                                <label for="courseName">Course Name *</label>
-                                <input type="text" id="courseName" name="courseName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="appointmentDate">Date *</label>
-                                <input type="date" id="appointmentDate" name="appointmentDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="appointmentTime">Time *</label>
-                                <input type="text" id="appointmentTime" name="appointmentTime" 
-                                       placeholder="12:00 PM" required 
-                                       pattern="^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$" 
-                                       title="Enter time in the format HH:MM AM/PM">
+                                <label for="sessionDate">Session Date *</label>
+                                <input type="date" id="sessionDate" name="sessionDate" required>
                             </div>
                             <div class="form-group">
-                                <label for="status">Status *</label>
-                                <select id="status" name="status" required>
-                                    <option value="Scheduled">Scheduled</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
+                                <label for="dueDate">Due Date *</label>
+                                <input type="date" id="dueDate" name="dueDate" required>
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Create Appointment</button>
-                        </div>
-                    </form>
-                </div>
-            `,
-            invoice: `
-                <div class="create-form-container">
-                    <form class="create-form" data-type="invoice">
-                        <div class="form-header">
-                            <h3>Create New Invoice</h3>
-                            <button type="button" class="btn-close" onclick="dashboard.closeModal()">×</button>
-                        </div>
-                        <div class="form-body">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="invoiceNumber">Invoice Number</label>
-                                    <div class="invoice-number-container">
-                                        <input type="text" id="invoiceNumber" name="invoiceNumber" required>
-                                        <button type="button" class="btn btn-sm btn-secondary" id="regenerate-invoice-btn">
-                                            🔄 Generate New
-                                        </button>
-                                    </div>
-                                    <small class="form-hint">Auto-generated 5-digit unique number</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="customerEmail">Customer Email *</label>
-                                    <input type="email" id="customerEmail" name="customerEmail" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="sessionDate">Session Date *</label>
-                                    <input type="date" id="sessionDate" name="sessionDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="dueDate">Due Date *</label>
-                                    <input type="date" id="dueDate" name="dueDate" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="hours">Hours *</label>
-                                    <input type="number" id="hours" name="hours" required min="1" step="0.5">
-                                </div>
-                                <div class="form-group">
-                                    <label for="price">Price per Hour *</label>
-                                    <input type="number" id="price" name="price" required min="0" step="0.01">
-                                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="hours">Hours *</label>
+                                <input type="number" id="hours" name="hours" required min="1" step="0.5">
                             </div>
                             <div class="form-group">
-                                <label for="isPaid">Payment Status *</label>
-                                <select id="isPaid" name="isPaid" required>
-                                    <option value="false">Not Paid</option>
-                                    <option value="true">Paid</option>
-                                </select>
+                                <label for="price">Price per Hour *</label>
+                                <input type="number" id="price" name="price" required min="0" step="0.01">
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Create Invoice</button>
+                        <div class="form-group">
+                            <label for="isPaid">Payment Status *</label>
+                            <select id="isPaid" name="isPaid" required>
+                                <option value="false">Not Paid</option>
+                                <option value="true">Paid</option>
+                            </select>
                         </div>
-                    </form>
-                </div>
-            `,
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-light" onclick="dashboard.closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Invoice</button>
+                    </div>
+                </form>
+            </div>
+        `,
         };
 
         return forms[type] || '';
@@ -845,11 +941,21 @@ class Dashboard {
                 data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value;
                 data.isAdmin = row.querySelector('select[name="isAdmin"]').value === 'true';
                 break;
+            case 'tutor':
+                data.fullName = row.querySelector('input[name="fullName"]').value;
+                data.email = row.querySelector('input[name="email"]').value;
+                data.phoneNumber = row.querySelector('input[name="phoneNumber"]').value;
+                data.isActive = row.querySelector('select[name="isActive"]').value === 'true';
+                break;
             case 'appointment':
                 data.courseName = row.querySelector('input[name="courseName"]').value;
                 data.appointmentDate = row.querySelector('input[name="appointmentDate"]').value;
                 data.appointmentTime = row.querySelector('input[name="appointmentTime"]').value;
                 data.status = row.querySelector('select[name="status"]').value;
+                const tutorSelect = row.querySelector('select[name="tutorId"]');
+                if (tutorSelect) {
+                    data.tutorId = tutorSelect.value;
+                }
                 break;
             case 'invoice':
                 data.invoiceNumber = row.querySelector('input[name="invoiceNumber"]').value;
@@ -858,6 +964,10 @@ class Dashboard {
                 data.hours = parseFloat(row.querySelector('input[name="hours"]').value);
                 data.price = parseFloat(row.querySelector('input[name="price"]').value);
                 data.isPaid = row.querySelector('select[name="isPaid"]').value === 'true';
+                const invoiceTutorSelect = row.querySelector('select[name="tutorId"]');
+                if (invoiceTutorSelect) {
+                    data.tutorId = invoiceTutorSelect.value;
+                }
                 break;
         }
 

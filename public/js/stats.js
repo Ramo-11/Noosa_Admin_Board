@@ -5,13 +5,14 @@ class StatsManager {
             totalRevenue: 0,
             totalUnpaidAmount: 0,
             userCount: 0,
+            tutorCount: 0,
             appointmentCount: 0,
             unpaidInvoiceCount: 0,
             paidInvoiceCount: 0,
             futureAppointments: 0,
             completedAppointments: 0,
             cancelledAppointments: 0,
-            courseCategories: {}
+            courseCategories: {},
         };
         this.init();
     }
@@ -33,7 +34,7 @@ class StatsManager {
             futureAppointments: 0,
             completedAppointments: 0,
             cancelledAppointments: 0,
-            courseCategories: {}
+            courseCategories: {},
         };
 
         const today = new Date();
@@ -46,12 +47,16 @@ class StatsManager {
         // Appointment stats
         const appointmentRows = document.querySelectorAll('#appointments tbody tr');
         this.stats.appointmentCount = appointmentRows.length;
-        
-        appointmentRows.forEach(row => {
+
+        // Tutor stats
+        const tutorRows = document.querySelectorAll('#tutors tbody tr');
+        this.stats.tutorCount = tutorRows.length;
+
+        appointmentRows.forEach((row) => {
             const status = row.dataset.status;
             const dateStr = row.dataset.date;
             const courseName = row.dataset.course;
-            
+
             // Count by status
             if (status === 'scheduled') {
                 // Check if future appointment
@@ -64,23 +69,24 @@ class StatsManager {
             } else if (status === 'cancelled') {
                 this.stats.cancelledAppointments++;
             }
-            
+
             // Count course categories (simplified - you can enhance this)
             if (courseName) {
                 const course = courseName.toLowerCase();
                 // Extract category from course name (assuming format like "Math 101" or "English Basics")
                 const category = course.split(' ')[0];
-                this.stats.courseCategories[category] = (this.stats.courseCategories[category] || 0) + 1;
+                this.stats.courseCategories[category] =
+                    (this.stats.courseCategories[category] || 0) + 1;
             }
         });
 
         // Invoice stats
         const invoiceRows = document.querySelectorAll('#invoices tbody tr');
-        
-        invoiceRows.forEach(row => {
+
+        invoiceRows.forEach((row) => {
             const total = parseFloat(row.dataset.total) || 0;
             const isPaid = row.dataset.paid === 'paid';
-            
+
             if (isPaid) {
                 this.stats.totalRevenue += total;
                 this.stats.paidInvoiceCount++;
@@ -114,9 +120,13 @@ class StatsManager {
                 <div class="stat-card stat-unpaid">
                     <div class="stat-icon">⏳</div>
                     <div class="stat-content">
-                        <div class="stat-value">$${this.formatNumber(this.stats.totalUnpaidAmount)}</div>
+                        <div class="stat-value">$${this.formatNumber(
+                            this.stats.totalUnpaidAmount
+                        )}</div>
                         <div class="stat-label">Unpaid Amount</div>
-                        <div class="stat-sublabel">${this.stats.unpaidInvoiceCount} invoice${this.stats.unpaidInvoiceCount !== 1 ? 's' : ''}</div>
+                        <div class="stat-sublabel">${this.stats.unpaidInvoiceCount} invoice${
+            this.stats.unpaidInvoiceCount !== 1 ? 's' : ''
+        }</div>
                     </div>
                 </div>
                 
@@ -129,6 +139,15 @@ class StatsManager {
                     </div>
                 </div>
                 
+                <!-- Tutor Stats -->
+                <div class="stat-card">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <div class="stat-content">
+                        <div class="stat-value">${this.stats.tutorCount}</div>
+                        <div class="stat-label">Total Tutors</div>
+                    </div>
+                </div>
+
                 <!-- Appointment Stats -->
                 <div class="stat-card">
                     <div class="stat-icon">📅</div>
@@ -136,8 +155,12 @@ class StatsManager {
                         <div class="stat-value">${this.stats.appointmentCount}</div>
                         <div class="stat-label">Total Appointments</div>
                         <div class="stat-breakdown">
-                            <span class="stat-item future">${this.stats.futureAppointments} upcoming</span>
-                            <span class="stat-item completed">${this.stats.completedAppointments} completed</span>
+                            <span class="stat-item future">${
+                                this.stats.futureAppointments
+                            } upcoming</span>
+                            <span class="stat-item completed">${
+                                this.stats.completedAppointments
+                            } completed</span>
                         </div>
                     </div>
                 </div>
@@ -146,32 +169,46 @@ class StatsManager {
                 <div class="stat-card">
                     <div class="stat-icon">📄</div>
                     <div class="stat-content">
-                        <div class="stat-value">${this.stats.paidInvoiceCount + this.stats.unpaidInvoiceCount}</div>
+                        <div class="stat-value">${
+                            this.stats.paidInvoiceCount + this.stats.unpaidInvoiceCount
+                        }</div>
                         <div class="stat-label">Total Invoices</div>
                         <div class="stat-breakdown">
                             <span class="stat-item paid">${this.stats.paidInvoiceCount} paid</span>
-                            <span class="stat-item unpaid">${this.stats.unpaidInvoiceCount} unpaid</span>
+                            <span class="stat-item unpaid">${
+                                this.stats.unpaidInvoiceCount
+                            } unpaid</span>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Course Categories -->
-                ${sortedCategories.length > 0 ? `
+                ${
+                    sortedCategories.length > 0
+                        ? `
                 <div class="stat-card stat-courses">
                     <div class="stat-icon">📚</div>
                     <div class="stat-content">
                         <div class="stat-label">Top Course Categories</div>
                         <div class="stat-categories">
-                            ${sortedCategories.map(([category, count]) => `
+                            ${sortedCategories
+                                .map(
+                                    ([category, count]) => `
                                 <div class="category-item">
-                                    <span class="category-name">${this.capitalizeFirst(category)}</span>
+                                    <span class="category-name">${this.capitalizeFirst(
+                                        category
+                                    )}</span>
                                     <span class="category-count">${count}</span>
                                 </div>
-                            `).join('')}
+                            `
+                                )
+                                .join('')}
                         </div>
                     </div>
                 </div>
-                ` : ''}
+                `
+                        : ''
+                }
             </div>
         `;
 

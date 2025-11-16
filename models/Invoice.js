@@ -1,47 +1,55 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Define the Invoice schema
-const invoiceSchema = new mongoose.Schema({
-    invoiceNumber: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true
+const invoiceSchema = new mongoose.Schema(
+    {
+        invoiceNumber: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+        },
+        customer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        tutor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Tutor',
+            required: true,
+        },
+        sessionDate: {
+            type: String,
+            required: true,
+        },
+        dueDate: {
+            type: String,
+            required: true,
+        },
+        hours: {
+            type: Number,
+            required: true,
+        },
+        price: {
+            type: Number,
+            required: true,
+        },
+        total: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+        isPaid: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
     },
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    sessionDate: {
-        type: String,
-        required: true
-    },
-    dueDate: {
-        type: String,
-        required: true
-    },
-    hours: {
-        type: Number,
-        required: true
-    },
-    price: {
-        type: Number,
-        required: true
-    },
-    total: {
-        type: Number,
-        required: true,
-        default: 0
-    },
-    isPaid: {
-        type: Boolean,
-        required: true,
-        default: false 
-    }
-}, { timestamps: true });
+    { timestamps: true }
+);
 
-invoiceSchema.pre('save', function(next) {
+invoiceSchema.pre('save', function (next) {
     this.total = this.hours * this.price;
     next();
 });

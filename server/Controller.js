@@ -58,10 +58,16 @@ class InvoiceNumberGenerator {
 const getAdminDashboard = async (req, res) => {
     try {
         const users = await User.find();
-        const appointments = await Appointment.find().populate('customer', 'fullName email');
-        const invoices = await Invoice.find().populate('customer', 'fullName email');
+        const Tutor = require('../models/Tutor');
+        const tutors = await Tutor.find();
+        const appointments = await Appointment.find()
+            .populate('customer', 'fullName email')
+            .populate('tutor', 'fullName email');
+        const invoices = await Invoice.find()
+            .populate('customer', 'fullName email')
+            .populate('tutor', 'fullName email');
 
-        res.render('index', { users, appointments, invoices });
+        res.render('index', { users, tutors, appointments, invoices });
     } catch (error) {
         generalLogger.error(`Error getting admin dashboard: ${error.message}`);
         res.status(500).send('Server Error');
@@ -98,7 +104,7 @@ const updateUser = async (req, res) => {
 };
 
 const updateAppointment = async (req, res) => {
-    const { courseName, appointmentDate, appointmentTime, status } = req.body;
+    const { courseName, appointmentDate, appointmentTime, status, tutorId } = req.body;
 
     if (!courseName || !appointmentDate || !appointmentTime || !status) {
         generalLogger.error(`Cannot update appointment. Required fields are missing.`);
@@ -106,16 +112,20 @@ const updateAppointment = async (req, res) => {
     }
 
     try {
-        const updatedAppointment = await Appointment.findByIdAndUpdate(
-            req.params.id,
-            {
-                courseName: courseName,
-                appointmentDate: appointmentDate,
-                appointmentTime: appointmentTime,
-                status: status,
-            },
-            { new: true }
-        );
+        const updateData = {
+            courseName: courseName,
+            appointmentDate: appointmentDate,
+            appointmentTime: appointmentTime,
+            status: status,
+        };
+
+        if (tutorId) {
+            updateData.tutor = tutorId;
+        }
+
+        const updatedAppointment = await Appointment.findByIdAndUpdate(req.params.id, updateData, {
+            new: true,
+        });
 
         if (!updatedAppointment) {
             generalLogger.error(`Appointment not found: ${req.params.id}`);
@@ -135,7 +145,7 @@ const updateAppointment = async (req, res) => {
 };
 
 const updateInvoice = async (req, res) => {
-    const { invoiceNumber, sessionDate, dueDate, hours, price, isPaid } = req.body;
+    const { invoiceNumber, sessionDate, dueDate, hours, price, isPaid, tutorId } = req.body;
 
     if (!invoiceNumber || !sessionDate || !dueDate || !hours || !price || isPaid == undefined) {
         generalLogger.error(`Cannot update invoice. Required fields are missing.`);
@@ -143,22 +153,47 @@ const updateInvoice = async (req, res) => {
     }
 
     try {
-        const updatedInvoice = await Invoice.findByIdAndUpdate(
-            req.params.id,
-            {
-                invoiceNumber: invoiceNumber,
-                sessionDate: sessionDate,
-                dueDate: dueDate,
-                hours: hours,
-                price: price,
-                total: hours * price,
-                isPaid: isPaid,
-            },
-            { new: true }
-        );
-
-        if (!updatedInvoice) {
+        const oldInvoice = await Invoice.findById(req.params.id);
+        if (!oldInvoice) {
             return res.status(404).send({ message: 'Invoice not found' });
+        }
+
+        const updateData = {
+            invoiceNumber: invoiceNumber,
+            sessionDate: sessionDate,
+            dueDate: dueDate,
+            hours: hours,
+            price: price,
+            total: hours * price,
+            isPaid: isPaid,
+        };
+
+        if (tutorId) {
+            updateData.tutor = tutorId;
+        }
+
+        const updatedInvoice = await Invoice.findByIdAndUpdate(req.params.id, updateData, {
+            new: true,
+        }).populate('tutor');
+
+        // Handle tutor earnings if payment status changed
+        if (updatedInvoice.tutor) {
+            const Tutor = require('../models/Tutor');
+            const tutor = await Tutor.findById(updatedInvoice.tutor._id);
+
+            if (oldInvoice.isPaid && !isPaid) {
+                // Was paid, now unpaid - subtract
+                tutor.totalEarnings -= oldInvoice.total;
+                await tutor.save();
+            } else if (!oldInvoice.isPaid && isPaid) {
+                // Was unpaid, now paid - add
+                tutor.totalEarnings += updatedInvoice.total;
+                await tutor.save();
+            } else if (oldInvoice.isPaid && isPaid && oldInvoice.total !== updatedInvoice.total) {
+                // Still paid but amount changed
+                tutor.totalEarnings = tutor.totalEarnings - oldInvoice.total + updatedInvoice.total;
+                await tutor.save();
+            }
         }
 
         generalLogger.info(`Invoice updated successfully`);
@@ -171,10 +206,19 @@ const updateInvoice = async (req, res) => {
 
 const markInvoiceAsPaid = async (req, res) => {
     try {
-        const invoice = await Invoice.findById(req.params.id);
+        const invoice = await Invoice.findById(req.params.id).populate('tutor');
         if (!invoice) {
             generalLogger.error(`Invoice not found: ${req.params.id}`);
             return res.status(404).json({ message: 'Invoice not found' });
+        }
+
+        if (!invoice.isPaid && invoice.tutor) {
+            const Tutor = require('../models/Tutor');
+            const tutor = await Tutor.findById(invoice.tutor._id);
+            if (tutor) {
+                tutor.totalEarnings += invoice.total;
+                await tutor.save();
+            }
         }
 
         invoice.isPaid = true;
@@ -219,13 +263,13 @@ const createUser = async (req, res) => {
 
 const createAppointment = async (req, res) => {
     try {
-        const { customerEmail, courseName, appointmentDate, appointmentTime, status } = req.body;
-        if (!customerEmail || !courseName || !appointmentDate || !appointmentTime)
-            return res
-                .status(400)
-                .send({
-                    message: 'Customer email, course name, appointment date, and time are required',
-                });
+        const { customerEmail, tutorId, courseName, appointmentDate, appointmentTime, status } =
+            req.body;
+        if (!customerEmail || !tutorId || !courseName || !appointmentDate || !appointmentTime)
+            return res.status(400).send({
+                message:
+                    'Customer email, tutor, course name, appointment date, and time are required',
+            });
 
         const customer = await User.findOne({ email: customerEmail });
         if (!customer) {
@@ -233,27 +277,35 @@ const createAppointment = async (req, res) => {
             return res.status(400).send({ message: 'Customer not found' });
         }
 
-        const newAppointment = new Appointment({
-        customer: customer._id,
-        courseName,
-        appointmentDate,
-        appointmentTime,
-        status,
-    });
+        const Tutor = require('../models/Tutor');
+        const tutor = await Tutor.findById(tutorId);
+        if (!tutor) {
+            generalLogger.error(`Cannot create appointment. Tutor not found`);
+            return res.status(400).send({ message: 'Tutor not found' });
+        }
 
-    try {
-        await sendAppointmentEmail(customer.email, {
-            status,
-            customerName: customer.fullName,
+        const newAppointment = new Appointment({
+            customer: customer._id,
+            tutor: tutor._id,
             courseName,
             appointmentDate,
             appointmentTime,
+            status,
         });
-        generalLogger.info(`Appointment email sent successfully to ${customer.email}`);
-    } catch (emailError) {
-        generalLogger.error(`Failed to send appointment email: ${emailError}`);
-    }
 
+        try {
+            await sendAppointmentEmail(customer.email, {
+                status,
+                customerName: customer.fullName,
+                tutorName: tutor.fullName,
+                courseName,
+                appointmentDate,
+                appointmentTime,
+            });
+            generalLogger.info(`Appointment email sent successfully to ${customer.email}`);
+        } catch (emailError) {
+            generalLogger.error(`Failed to send appointment email: ${emailError}`);
+        }
 
         await newAppointment.save();
 
@@ -267,11 +319,20 @@ const createAppointment = async (req, res) => {
 
 const createInvoice = async (req, res) => {
     try {
-        const { invoiceNumber, customerEmail, sessionDate, dueDate, price, hours, isPaid } =
-            req.body;
+        const {
+            invoiceNumber,
+            customerEmail,
+            tutorId,
+            sessionDate,
+            dueDate,
+            price,
+            hours,
+            isPaid,
+        } = req.body;
         if (
             !invoiceNumber ||
             !customerEmail ||
+            !tutorId ||
             !sessionDate ||
             !dueDate ||
             !price ||
@@ -296,9 +357,17 @@ const createInvoice = async (req, res) => {
             return res.status(400).send({ message: 'Customer not found' });
         }
 
+        const Tutor = require('../models/Tutor');
+        const tutor = await Tutor.findById(tutorId);
+        if (!tutor) {
+            generalLogger.error(`Cannot create invoice. Tutor not found`);
+            return res.status(400).send({ message: 'Tutor not found' });
+        }
+
         const newInvoice = new Invoice({
             invoiceNumber,
             customer: customer._id,
+            tutor: tutor._id,
             sessionDate,
             dueDate,
             hours,
@@ -307,10 +376,18 @@ const createInvoice = async (req, res) => {
             isPaid,
         });
         await newInvoice.save();
+
+        // Update tutor earnings if invoice is paid
+        if (isPaid) {
+            tutor.totalEarnings += hours * price;
+            await tutor.save();
+        }
+
         // Send email
         try {
             await sendInvoiceEmail(customer.email, {
                 customerName: customer.fullName,
+                tutorName: tutor.fullName,
                 invoiceNumber,
                 sessionDate,
                 dueDate,

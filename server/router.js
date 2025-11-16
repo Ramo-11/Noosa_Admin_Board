@@ -18,6 +18,8 @@ const {
     deleteInvoice,
 } = require('./Controller');
 
+const { createTutor, getTutors, updateTutor, deleteTutor } = require('./tutorController');
+
 // *********** GET Requests ***********
 route.get('/', getAdminDashboard);
 route.get('/api/generate-invoice-number', generateInvoiceNumber);
@@ -37,5 +39,11 @@ route.post('/index/invoices', createInvoice);
 route.delete('/index/users/:id', deleteUser);
 route.delete('/index/appointments/:id', deleteAppointment);
 route.delete('/index/invoices/:id', deleteInvoice);
+
+// *********** Tutor Routes ***********
+route.get('/index/tutors', getTutors);
+route.post('/index/tutors', createTutor);
+route.put('/index/tutors/:id', updateTutor);
+route.delete('/index/tutors/:id', deleteTutor);
 
 module.exports = route;

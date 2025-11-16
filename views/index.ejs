@@ -46,6 +46,10 @@
                 <span class="tab-icon">💰</span>
                 Invoices
             </button>
+            <button class="tab-button" data-tab="tutors">
+                <span class="tab-icon">👨‍🏫</span>
+                Tutors
+            </button>
         </nav>
 
         <!-- Users Tab -->
@@ -173,6 +177,14 @@
                         <% }) %>
                     </select>
                 </div>
+                <div class="filter-group">
+                    <select id="appointments-tutor-filter" class="filter-select">
+                        <option value="">All Tutors</option>
+                        <% tutors.forEach(tutor => { %>
+                            <option value="<%= tutor.email.toLowerCase() %>"><%= tutor.fullName %></option>
+                        <% }) %>
+                    </select>
+                </div>
                 <div class="sort-group">
                     <select id="appointments-sort" class="sort-select">
                         <option value="appointmentDate-desc">Date (Newest)</option>
@@ -194,6 +206,7 @@
                     <thead>
                         <tr>
                             <th>Customer</th>
+                            <th>Tutor</th>
                             <th>Course</th>
                             <th class="hide-mobile">Date</th>
                             <th class="hide-mobile">Time</th>
@@ -206,6 +219,8 @@
                             <tr id="appointment-row-<%= appointment._id %>" data-id="<%= appointment._id %>"
                                 data-customer="<%= appointment.customer ? appointment.customer.email.toLowerCase() : 'deleted user' %>"
                                 data-customer-name="<%= appointment.customer ? appointment.customer.fullName.toLowerCase() : 'deleted user' %>"
+                                data-tutor="<%= appointment.tutor ? appointment.tutor.email.toLowerCase() : '' %>"
+                                data-tutor-name="<%= appointment.tutor ? appointment.tutor.fullName.toLowerCase() : '' %>"
                                 data-course="<%= appointment.courseName.toLowerCase() %>"
                                 data-date="<%= appointment.appointmentDate %>"
                                 data-status="<%= appointment.status.toLowerCase() %>"
@@ -215,6 +230,20 @@
                                         <%= appointment.customer ? appointment.customer.email : 'Deleted User' %>
                                     </span>
                                     <input type="text" class="edit-mode" name="customerEmail" value="<%= appointment.customer ? appointment.customer.email : '' %>">
+                                </td>
+                                <td data-label="Tutor">
+                                    <span class="view-mode">
+                                        <%= appointment.tutor ? appointment.tutor.fullName : 'N/A' %>
+                                    </span>
+                                    <select class="edit-mode" name="tutorId">
+                                        <option value="">Select tutor...</option>
+                                        <% tutors.forEach(tutor => { %>
+                                            <option value="<%= tutor._id %>" 
+                                                <%= appointment.tutor && appointment.tutor._id.toString() === tutor._id.toString() ? 'selected' : '' %>>
+                                                <%= tutor.fullName %>
+                                            </option>
+                                        <% }) %>
+                                    </select>
                                 </td>
                                 <td data-label="Course">
                                     <span class="view-mode"><%= appointment.courseName %></span>
@@ -295,6 +324,14 @@
                         <% }) %>
                     </select>
                 </div>
+                <div class="filter-group">
+                    <select id="invoices-tutor-filter" class="filter-select">
+                        <option value="">All Tutors</option>
+                        <% tutors.forEach(tutor => { %>
+                            <option value="<%= tutor.email.toLowerCase() %>"><%= tutor.fullName %></option>
+                        <% }) %>
+                    </select>
+                </div>
                 <div class="sort-group">
                     <select id="invoices-sort" class="sort-select">
                         <option value="dueDate-desc">Due Date (Latest)</option>
@@ -318,6 +355,7 @@
                         <tr>
                             <th>Invoice #</th>
                             <th>Customer</th>
+                            <th>Tutor</th>
                             <th class="hide-mobile">Session Date</th>
                             <th class="hide-mobile">Due Date</th>
                             <th class="hide-mobile">Hours</th>
@@ -333,6 +371,8 @@
                                 data-invoice-number="<%= invoice.invoiceNumber.toLowerCase() %>"
                                 data-customer="<%= invoice.customer ? invoice.customer.email.toLowerCase() : 'user deleted' %>"
                                 data-customer-name="<%= invoice.customer ? invoice.customer.fullName.toLowerCase() : 'user deleted' %>"
+                                data-tutor="<%= invoice.tutor ? invoice.tutor.email.toLowerCase() : '' %>"
+                                data-tutor-name="<%= invoice.tutor ? invoice.tutor.fullName.toLowerCase() : '' %>"
                                 data-session-date="<%= invoice.sessionDate %>"
                                 data-due-date="<%= invoice.dueDate %>"
                                 data-total="<%= invoice.total %>"
@@ -347,6 +387,20 @@
                                         <%= invoice.customer ? invoice.customer.email : 'User Deleted' %>
                                     </span>
                                     <input type="text" class="edit-mode" name="customerEmail" value="<%= invoice.customer ? invoice.customer.email : '' %>">
+                                </td>
+                                <td data-label="Tutor">
+                                    <span class="view-mode">
+                                        <%= invoice.tutor ? invoice.tutor.fullName : 'N/A' %>
+                                    </span>
+                                    <select class="edit-mode" name="tutorId">
+                                        <option value="">Select tutor...</option>
+                                        <% tutors.forEach(tutor => { %>
+                                            <option value="<%= tutor._id %>" 
+                                                <%= invoice.tutor && invoice.tutor._id.toString() === tutor._id.toString() ? 'selected' : '' %>>
+                                                <%= tutor.fullName %>
+                                            </option>
+                                        <% }) %>
+                                    </select>
                                 </td>
                                 <td data-label="Session Date" class="hide-mobile">
                                     <span class="view-mode"><%= invoice.sessionDate %></span>
@@ -391,6 +445,108 @@
                                                 Cancel
                                             </button>
                                             <button class="btn btn-sm btn-danger" data-action="delete" data-type="invoice" data-id="<%= invoice._id %>">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tutors Tab -->
+        <section id="tutors" class="tab-content">
+            <div class="section-header">
+                <h2>Tutors Management</h2>
+                <button class="btn btn-primary" data-action="create" data-type="tutor">
+                    <span class="btn-icon">➕</span>
+                    Add Tutor
+                </button>
+            </div>
+
+            <!-- Filters for Tutors -->
+            <div class="filters-container">
+                <div class="search-group">
+                    <input type="text" id="tutors-search" placeholder="Search tutors..." class="search-input">
+                </div>
+                <div class="sort-group">
+                    <select id="tutors-sort" class="sort-select">
+                        <option value="fullName-asc">Name (A-Z)</option>
+                        <option value="fullName-desc">Name (Z-A)</option>
+                        <option value="email-asc">Email (A-Z)</option>
+                        <option value="email-desc">Email (Z-A)</option>
+                        <option value="createdAt-desc">Newest First</option>
+                        <option value="createdAt-asc">Oldest First</option>
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-light btn-sm" id="tutors-clear-filters">Clear Filters</button>
+                    <span class="results-count" id="tutors-count"><%= tutors.length %> tutors</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th class="hide-mobile">Phone Number</th>
+                            <th class="hide-mobile">Total Earnings</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% tutors.forEach(tutor => { %>
+                            <tr id="tutor-row-<%= tutor._id %>" data-id="<%= tutor._id %>" 
+                                data-name="<%= (tutor.fullName || '').toLowerCase() %>"
+                                data-email="<%= (tutor.email || '').toLowerCase() %>"
+                                data-phone="<%= (tutor.phoneNumber || '').toLowerCase() %>"
+                                data-isActive="<%= tutor.isActive %>"
+                                data-created="<%= tutor.createdAt %>">
+                                <td data-label="Name">
+                                    <span class="view-mode"><%= tutor.fullName %></span>
+                                    <input type="text" class="edit-mode" name="fullName" value="<%= tutor.fullName %>">
+                                </td>
+                                <td data-label="Email">
+                                    <span class="view-mode"><%= tutor.email %></span>
+                                    <input type="email" class="edit-mode" name="email" value="<%= tutor.email %>">
+                                </td>
+                                <td data-label="Phone" class="hide-mobile">
+                                    <span class="view-mode"><%= tutor.phoneNumber || 'N/A' %></span>
+                                    <input type="text" class="edit-mode" name="phoneNumber" value="<%= tutor.phoneNumber || '' %>">
+                                </td>
+                                <td data-label="Total Earnings" class="hide-mobile">
+                                    <span class="view-mode total-amount">$<%= tutor.totalEarnings.toFixed(2) %></span>
+                                </td>
+                                <td data-label="Active">
+                                    <span class="view-mode">
+                                        <span class="status-badge <%= tutor.isActive ? 'status-paid' : 'status-unpaid' %>">
+                                            <%= tutor.isActive ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </span>
+                                    <select class="edit-mode" name="isActive">
+                                        <option value="true" <%= tutor.isActive ? 'selected' : '' %>>Active</option>
+                                        <option value="false" <%= !tutor.isActive ? 'selected' : '' %>>Inactive</option>
+                                    </select>
+                                </td>
+                                <td data-label="Actions" class="actions-cell">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-secondary edit-btn" data-action="edit" data-type="tutor" data-id="<%= tutor._id %>">
+                                            Edit
+                                        </button>
+                                        <div class="edit-actions edit-mode">
+                                            <button class="btn btn-sm btn-success" data-action="save" data-type="tutor" data-id="<%= tutor._id %>">
+                                                Save
+                                            </button>
+                                            <button class="btn btn-sm btn-light" data-action="cancel" data-type="tutor" data-id="<%= tutor._id %>">
+                                                Cancel
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" data-action="delete" data-type="tutor" data-id="<%= tutor._id %>">
                                                 Delete
                                             </button>
                                         </div>
