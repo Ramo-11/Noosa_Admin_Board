@@ -65,19 +65,12 @@ const generateInvoiceNumber = async (req, res) => {
 
 const createInvoice = async (req, res) => {
     try {
-        const {
-            invoiceNumber,
-            customerEmail,
-            tutorId,
-            sessionDate,
-            dueDate,
-            price,
-            hours,
-            isPaid,
-        } = req.body;
+        const { invoiceNumber, customerId, tutorId, sessionDate, dueDate, price, hours, isPaid } =
+            req.body;
+
         if (
             !invoiceNumber ||
-            !customerEmail ||
+            !customerId ||
             !tutorId ||
             !sessionDate ||
             !dueDate ||
@@ -97,7 +90,7 @@ const createInvoice = async (req, res) => {
             return res.status(400).send({ message: 'Invoice number already exists' });
         }
 
-        const customer = await User.findOne({ email: customerEmail });
+        const customer = await User.findById(customerId);
         if (!customer) {
             generalLogger.error(`Cannot create invoice. Customer not found`);
             return res.status(400).send({ message: 'Customer not found' });
@@ -109,7 +102,6 @@ const createInvoice = async (req, res) => {
             return res.status(400).send({ message: 'Tutor not found' });
         }
 
-        // Calculate split shares using tutor's share percentage
         const MILESTONE_DATE = new Date('2024-12-05');
         const invoiceDate = new Date(sessionDate);
         const total = hours * price;
@@ -143,7 +135,6 @@ const createInvoice = async (req, res) => {
         });
         await newInvoice.save();
 
-        // Update tutor earnings
         if (isPaid) {
             if (appliesSplitRule) {
                 tutor.totalEarningsAfterSplit += tutorShare;
@@ -157,7 +148,6 @@ const createInvoice = async (req, res) => {
             await tutor.save();
         }
 
-        // Send email
         try {
             await sendInvoiceEmail(customer.email, {
                 customerName: customer.fullName,
