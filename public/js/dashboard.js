@@ -252,8 +252,28 @@ class Dashboard {
 
         const hasUnpaidInvoices = visibleRows.some((row) => row.dataset.paid === 'unpaid');
 
+        // Check if filtering by specific customer
+        const customerFilter = this.filters.invoices.customer;
+
         if (hasUnpaidInvoices) {
+            markPaidBtn.style.marginLeft = 'auto';
             markPaidBtn.style.display = 'inline-flex';
+
+            // Update button text based on filter
+            if (customerFilter) {
+                const unpaidCount = visibleRows.filter(
+                    (row) => row.dataset.paid === 'unpaid'
+                ).length;
+                const customerName = visibleRows[0]?.dataset.customerName || 'customer';
+                markPaidBtn.innerHTML = `Mark All as Paid for ${
+                    customerName.split(' ')[0]
+                } (${unpaidCount})`;
+            } else {
+                const unpaidCount = visibleRows.filter(
+                    (row) => row.dataset.paid === 'unpaid'
+                ).length;
+                markPaidBtn.innerHTML = `Mark All as Paid (${unpaidCount})`;
+            }
         } else {
             markPaidBtn.style.display = 'none';
         }
