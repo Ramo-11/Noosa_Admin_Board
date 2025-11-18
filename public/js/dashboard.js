@@ -578,8 +578,8 @@ class Dashboard {
         const overlay = document.getElementById('modal-overlay');
 
         modalContainer.innerHTML = formHtml;
-        overlay.style.display = 'block';
-        modalContainer.style.display = 'block';
+        overlay.style.display = 'flex';
+        modalContainer.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
         // Special handling for invoice form
@@ -593,6 +593,11 @@ class Dashboard {
             if (tutorSelect) {
                 this.populateTutorDropdown(tutorSelect);
             }
+            const customerSelect =
+                document.getElementById('customerId') || document.getElementById('customerEmail');
+            if (customerSelect && customerSelect.tagName === 'SELECT') {
+                this.populateCustomerDropdown(customerSelect);
+            }
         }
 
         // Focus first input
@@ -600,6 +605,22 @@ class Dashboard {
             const firstInput = modalContainer.querySelector('input:not([readonly]), select');
             if (firstInput) firstInput.focus();
         }, 100);
+    }
+
+    async populateCustomerDropdown(selectElement) {
+        try {
+            const response = await fetch('/index/users');
+            const users = await response.json();
+
+            users.forEach((user) => {
+                const option = document.createElement('option');
+                option.value = user._id;
+                option.textContent = `${user.fullName} (${user.email})`;
+                selectElement.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading customers:', error);
+        }
     }
 
     async populateTutorDropdown(selectElement) {
@@ -760,8 +781,10 @@ class Dashboard {
                     </div>
                     <div class="form-body">
                         <div class="form-group">
-                            <label for="customerEmail">Customer Email *</label>
-                            <input type="email" id="customerEmail" name="customerEmail" required>
+                            <label for="customerId">Customer *</label>
+                            <select id="customerId" name="customerId" required>
+                                <option value="">Select a customer...</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="tutorId">Tutor *</label>
@@ -820,8 +843,10 @@ class Dashboard {
                                 <small class="form-hint">Auto-generated 5-digit unique number</small>
                             </div>
                             <div class="form-group">
-                                <label for="customerEmail">Customer Email *</label>
-                                <input type="email" id="customerEmail" name="customerEmail" required>
+                                <label for="customerId">Customer *</label>
+                                <select id="customerId" name="customerId" required>
+                                    <option value="">Select a customer...</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -1066,6 +1091,11 @@ class Dashboard {
 
         // Store current tab before reload
         this.storeCurrentTab(this.currentTab);
+
+        // Close modal immediately for success
+        if (type === 'success') {
+            this.closeModal();
+        }
 
         setTimeout(() => {
             notification.style.display = 'none';

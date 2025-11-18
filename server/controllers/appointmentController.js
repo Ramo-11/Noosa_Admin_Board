@@ -6,15 +6,14 @@ const { generalLogger } = require('../utils/generalLogger');
 
 const createAppointment = async (req, res) => {
     try {
-        const { customerEmail, tutorId, courseName, appointmentDate, appointmentTime, status } =
+        const { customerId, tutorId, courseName, appointmentDate, appointmentTime, status } =
             req.body;
-        if (!customerEmail || !tutorId || !courseName || !appointmentDate || !appointmentTime)
+        if (!customerId || !tutorId || !courseName || !appointmentDate || !appointmentTime)
             return res.status(400).send({
-                message:
-                    'Customer email, tutor, course name, appointment date, and time are required',
+                message: 'Customer, tutor, course name, appointment date, and time are required',
             });
 
-        const customer = await User.findOne({ email: customerEmail });
+        const customer = await User.findById(customerId);
         if (!customer) {
             generalLogger.error(`Cannot create appointment. Customer not found`);
             return res.status(400).send({ message: 'Customer not found' });

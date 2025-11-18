@@ -97,7 +97,6 @@ class StatsManager {
         const invoiceRows = document.querySelectorAll('#invoices tbody tr');
 
         invoiceRows.forEach((row) => {
-            console.log(row.dataset);
             const total = parseFloat(row.dataset.total) || 0;
             const isPaid = row.dataset.paid === 'paid';
             const appliesSplit = row.dataset.appliesSplit === 'true';

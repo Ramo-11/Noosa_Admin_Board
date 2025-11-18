@@ -10,7 +10,7 @@ const {
     deleteAppointment,
 } = require('./controllers/appointmentController');
 
-const { createUser, updateUser, deleteUser } = require('./controllers/userController');
+const { getUsers, createUser, updateUser, deleteUser } = require('./controllers/userController');
 
 const {
     generateInvoiceNumber,
@@ -38,6 +38,7 @@ route.put('/index/invoices/:id', updateInvoice);
 route.put('/index/invoices/:id/mark-paid', markInvoiceAsPaid);
 
 // *********** POST Requests **********
+route.get('/index/users', getUsers);
 route.post('/index/users', createUser);
 route.post('/index/appointments', createAppointment);
 route.post('/index/invoices', createInvoice);

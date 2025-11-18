@@ -2,6 +2,16 @@ const User = require('../../models/User');
 const { generalLogger } = require('../utils/generalLogger');
 const bcrypt = require('bcrypt');
 
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.find().sort({ fullName: 1 });
+        res.json(users);
+    } catch (error) {
+        generalLogger.error(`Error fetching users: ${error.message}`);
+        res.status(500).json({ message: 'Error fetching users', error: error.message });
+    }
+};
+
 const createUser = async (req, res) => {
     try {
         const { fullName, email, phoneNumber } = req.body;
@@ -64,6 +74,7 @@ const deleteUser = async (req, res) => {
 };
 
 module.exports = {
+    getUsers,
     createUser,
     updateUser,
     deleteUser,
