@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { generalLogger } = require('./utils/generalLogger');
 require('dotenv').config();
 
 const mailTransporter = nodemailer.createTransport({
@@ -162,15 +163,14 @@ async function sendAppointmentEmail(to, appointmentDetails) {
     let introText = '';
     let highlightTitle = '';
     let extraNote = '';
-    console.log('Status' + status);
-    switch (status) {
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
         case 'scheduled':
             subject = `Appointment Confirmation for ${courseName}`;
             header = 'Appointment Confirmed';
             introText = `Dear ${customerName},<br><br>Your appointment has been successfully scheduled.`;
             highlightTitle = 'Appointment Details';
-            extraNote =
-                'We look forward to your session. If you need to reschedule, please contact us in advance.';
+            extraNote = 'We look forward to your session.';
             break;
 
         case 'completed':
@@ -178,24 +178,19 @@ async function sendAppointmentEmail(to, appointmentDetails) {
             header = 'Appointment Completed';
             introText = `Dear ${customerName},<br><br>Your appointment for <strong>${courseName}</strong> has been completed successfully.`;
             highlightTitle = 'Completed Appointment Details';
-            extraNote = 'Thank you for attending! We appreciate your participation.';
+            extraNote = 'Thank you for choosing our service. We hope it was a valuable experience.';
             break;
 
         case 'canceled':
             subject = `Appointment Canceled - ${courseName}`;
             header = 'Appointment Canceled';
-            introText = `Dear ${customerName},<br><br>We regret to inform you that your appointment for <strong>${courseName}</strong> has been canceled.`;
+            introText = `Dear ${customerName},<br><br>Your appointment for <strong>${courseName}</strong> has been canceled.`;
             highlightTitle = 'Canceled Appointment Details';
-            extraNote =
-                'If this was unintentional or you’d like to rebook, please contact our support team.';
+            extraNote = '';
             break;
 
         default:
-            subject = `Appointment Update - ${courseName}`;
-            header = 'Appointment Update';
-            introText = `Dear ${customerName},<br><br>Here’s an update regarding your appointment.`;
-            highlightTitle = 'Appointment Details';
-            extraNote = '';
+            generalLogger.info(`No email sent for unknown status: ${status}`);
             break;
     }
 

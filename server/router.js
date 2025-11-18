@@ -2,23 +2,30 @@ const express = require('express');
 const route = express.Router();
 require('dotenv').config();
 
-// Import Controller Methods
-const {
-    getAdminDashboard,
-    generateInvoiceNumber,
-    updateUser,
-    updateAppointment,
-    updateInvoice,
-    markInvoiceAsPaid,
-    createUser,
-    createAppointment,
-    createInvoice,
-    deleteUser,
-    deleteAppointment,
-    deleteInvoice,
-} = require('./Controller');
+const { getAdminDashboard } = require('./controllers/adminController');
 
-const { createTutor, getTutors, updateTutor, deleteTutor } = require('./tutorController');
+const {
+    updateAppointment,
+    createAppointment,
+    deleteAppointment,
+} = require('./controllers/appointmentController');
+
+const { createUser, updateUser, deleteUser } = require('./controllers/userController');
+
+const {
+    generateInvoiceNumber,
+    createInvoice,
+    updateInvoice,
+    deleteInvoice,
+    markInvoiceAsPaid,
+} = require('./controllers/invoiceController');
+
+const {
+    createTutor,
+    getTutors,
+    updateTutor,
+    deleteTutor,
+} = require('./controllers/tutorController');
 
 // *********** GET Requests ***********
 route.get('/', getAdminDashboard);

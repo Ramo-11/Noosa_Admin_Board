@@ -1,5 +1,5 @@
-const Tutor = require('../models/Tutor');
-const { generalLogger } = require('./utils/generalLogger');
+const Tutor = require('../../models/Tutor');
+const { generalLogger } = require('../utils/generalLogger');
 
 const createTutor = async (req, res) => {
     try {
