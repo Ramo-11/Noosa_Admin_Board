@@ -10,6 +10,9 @@ const createTransporter = () => {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_APP_PASSWORD,
         },
+        connectionTimeout: 10000, // 10s
+        greetingTimeout: 10000, // 10s
+        socketTimeout: 20000, // 20s
         tls: { rejectUnauthorized: false },
     });
 };
