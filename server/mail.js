@@ -2,23 +2,29 @@ const nodemailer = require('nodemailer');
 const { generalLogger } = require('./utils/generalLogger');
 require('dotenv').config();
 
-const mailTransporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'noosa@noosaengage.com',
-        pass: process.env.EMAIL_PASSWORD,
-    },
-    tls: {
-        rejectUnauthorized: false,
-    },
-});
+const createTransporter = () => {
+    return nodemailer.createTransport({
+        host: 'smtp.hostinger.com',
+        port: 465,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_APP_PASSWORD,
+        },
+        tls: {
+            rejectUnauthorized: false,
+        },
+    });
+};
 
 async function sendInvoiceEmail(to, invoiceDetails) {
-    const mailOptions = {
-        from: '"Noosa Admin Board" <noosa@noosaengage.com>',
-        to,
-        subject: `Invoice #${invoiceDetails.invoiceNumber}`,
-        html: `
+    try {
+        const transporter = createTransporter();
+
+        const mailOptions = {
+            from: '"Noosa Admin Board" <noosa@noosaengage.com>',
+            to,
+            subject: `Invoice #${invoiceDetails.invoiceNumber}`,
+            html: `
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -148,9 +154,12 @@ async function sendInvoiceEmail(to, invoiceDetails) {
             </body>
             </html>
         `,
-    };
+        };
 
-    await mailTransporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        generalLogger.error(`Failed to send invoice email: ${error}`);
+    }
 }
 
 async function sendAppointmentEmail(to, appointmentDetails) {
@@ -194,11 +203,14 @@ async function sendAppointmentEmail(to, appointmentDetails) {
             break;
     }
 
-    const mailOptions = {
-        from: '"Noosa Admin Board" <noosa@noosaengage.com>',
-        to,
-        subject,
-        html: `
+    try {
+        const transporter = createTransporter();
+
+        const mailOptions = {
+            from: '"Noosa Admin Board" <noosa@noosaengage.com>',
+            to,
+            subject,
+            html: `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -310,9 +322,12 @@ async function sendAppointmentEmail(to, appointmentDetails) {
         </body>
         </html>
         `,
-    };
+        };
 
-    await mailTransporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        generalLogger.error(`Failed to send invoice email: ${error}`);
+    }
 }
 
 module.exports = { sendInvoiceEmail, sendAppointmentEmail };

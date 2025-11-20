@@ -148,19 +148,20 @@ const createInvoice = async (req, res) => {
             await tutor.save();
         }
 
-        try {
-            await sendInvoiceEmail(customer.email, {
-                customerName: customer.fullName,
-                tutorName: tutor.fullName,
-                invoiceNumber,
-                sessionDate,
-                dueDate,
-                total: total,
+        sendInvoiceEmail(customer.email, {
+            customerName: customer.fullName,
+            tutorName: tutor.fullName,
+            invoiceNumber,
+            sessionDate,
+            dueDate,
+            total: total,
+        })
+            .then(() => {
+                generalLogger.info(`Invoice email sent successfully to ${customer.email}`);
+            })
+            .catch((emailError) => {
+                generalLogger.error(`Failed to send invoice email: ${emailError}`);
             });
-            generalLogger.info(`Invoice email sent successfully to ${customer.email}`);
-        } catch (emailError) {
-            generalLogger.error(`Failed to send invoice email: ${emailError}`);
-        }
 
         generalLogger.info(`Invoice created successfully`);
         return res.status(201).send({ message: 'Invoice created successfully' });
