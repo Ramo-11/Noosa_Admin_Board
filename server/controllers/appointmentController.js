@@ -36,19 +36,20 @@ const createAppointment = async (req, res) => {
 
         await newAppointment.save();
 
-        try {
-            await sendAppointmentEmail(customer.email, {
-                status,
-                customerName: customer.fullName,
-                tutorName: tutor.fullName,
-                courseName,
-                appointmentDate,
-                appointmentTime,
+        sendAppointmentEmail(customer.email, {
+            status,
+            customerName: customer.fullName,
+            tutorName: tutor.fullName,
+            courseName,
+            appointmentDate,
+            appointmentTime,
+        })
+            .then(() => {
+                generalLogger.info(`Appointment email sent successfully to ${customer.email}`);
+            })
+            .catch((emailError) => {
+                generalLogger.error(`Failed to send appointment email: ${emailError}`);
             });
-            generalLogger.info(`Appointment email sent successfully to ${customer.email}`);
-        } catch (emailError) {
-            generalLogger.error(`Failed to send appointment email: ${emailError}`);
-        }
 
         generalLogger.info(`Appointment created successfully`);
         return res.status(201).send({ message: 'Appointment created successfully' });
