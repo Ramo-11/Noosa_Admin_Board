@@ -1,22 +1,16 @@
 const nodemailer = require('nodemailer');
-// We don't need the logger here anymore, the controller handles it
-// const { generalLogger } = require('./utils/generalLogger');
 require('dotenv').config();
 
 const createTransporter = () => {
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_APP_PASSWORD,
         },
-        // Timeouts to prevent hanging
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000,
-        tls: {
-            rejectUnauthorized: false,
-        },
+        tls: { rejectUnauthorized: false },
     });
 };
 
