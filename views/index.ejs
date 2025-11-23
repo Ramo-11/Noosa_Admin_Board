@@ -422,7 +422,7 @@
                                     <input type="number" class="edit-mode" name="price" value="<%= invoice.price %>" step="0.01">
                                 </td>
                                 <td data-label="Total">
-                                    <span class="view-mode total-amount">$<%= invoice.total %></span>
+                                    <span class="view-mode total-amount">$<%= Math.round(invoice.total) %></span>
                                 </td>
                                 <td data-label="Status">
                                     <span class="view-mode">
