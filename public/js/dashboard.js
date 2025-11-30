@@ -289,7 +289,7 @@ class Dashboard {
             let unpaidCount = 0;
 
             visibleRows.forEach((row) => {
-                const total = parseFloat(row.dataset.total) || 0;
+                const total = Math.round(Number(row.dataset.total.trim())) || 0;
                 const isPaid = row.dataset.paid === 'paid';
 
                 if (isPaid) {
@@ -304,11 +304,12 @@ class Dashboard {
             summaryHtml = `
             <div class="visible-summary">
                 <span class="summary-item paid">Paid: $${totalPaid.toFixed(2)} (${paidCount})</span>
-                <span class="summary-item unpaid">Unpaid: $${totalUnpaid.toFixed(
-                    2
-                )} (${unpaidCount})</span>
-                <span class="summary-item total">Total: $${(totalPaid + totalUnpaid).toFixed(
-                    2
+                
+                <span class="summary-item unpaid">Unpaid: $${
+                    Math.round(totalUnpaid * 100) / 100
+                } (${unpaidCount})</span>
+                <span class="summary-item total">Total: $${Math.round(
+                    totalPaid + totalUnpaid
                 )}</span>
             </div>
         `;
