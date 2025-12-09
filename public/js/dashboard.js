@@ -889,7 +889,7 @@ class Dashboard {
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="hours">Hours *</label>
-                                <input type="number" id="hours" name="hours" required min="1" step="0.5">
+                                <input type="number" id="hours" name="hours" required min="0.25" step="0.25">
                             </div>
                             <div class="form-group">
                                 <label for="price">Price per Hour *</label>
